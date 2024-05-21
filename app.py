@@ -192,7 +192,7 @@ st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     result_df = pd.DataFrame(result_output)
-    st.dataframe(result_df, use_container_width=True)
+    st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     st.subheader("Concrete Volume")
     st.write(f"Original Concrete Volume: {original_concrete_volume:.2f} m³")
 
@@ -200,13 +200,12 @@ st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
-    st.dataframe(result_df, use_container_width=True)
+    st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig is not None:
         st.pyplot(fig)
         st.subheader("Concrete Volume Comparison")
         st.write(f"Original Concrete Volume: {original_concrete_volume:.2f} m³")
         st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.2f} m³")
-        # Bar chart for concrete volume comparison
         volume_data = pd.DataFrame({
             'Volume': ['Original', 'Optimized'],
             'Concrete Volume (m³)': [original_concrete_volume, optimized_concrete_volume]
