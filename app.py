@@ -18,7 +18,7 @@ def calculate_foundation_weight(params, rho_conc):
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
     d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
     h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
+    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2 / rho_conc) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
     W = ((np.pi * d1**2 / 4) * h_water + (C4 / rho_conc)) * rho_water  # Corrected buoyancy force calculation
     return B_wet, W
 
@@ -109,7 +109,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return p_min - 0.1  # Ensure p_min is greater than 0.1 kN/m²
+        return p_min - 0.5  # Ensure p_min is greater than 0.5 kN/m²
 
     def constraint_theta(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
@@ -148,7 +148,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
                     "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
                 ],
                 "Value": [
-                    f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
+                    f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]::.2f} m", f"{params[4]:.2f} m",
                     f"{params[5]:.2f} m", f"{params[6]:.2f} m", f"{params[7]:.2f} m", f"{params[8]:.2f} m",
                     f"{total_weight:.2f} kN", f"{p_min:.2f} kN/m²", f"{p_max:.2f} kN/m²", f"{B_wet:.2f} kN", f"{W:.2f} kN",
                     f"{F_z:.2f} kN", f"{net_load:.2f} kN"
@@ -217,4 +217,11 @@ if st.button("Optimize Foundation"):
                 'Volume': ['Original', 'Optimized'],
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
-            st.bar_chart(volume_data.set_index('Volume'))
+
+            # Plot horizontal bar chart with colors and embedded text
+            fig, ax = plt.subplots()
+            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+            ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
+            plt.xlabel('Concrete Volume (m³)')
+            plt.title('Concrete Volume Comparison')
+            st.pyplot(fig)
