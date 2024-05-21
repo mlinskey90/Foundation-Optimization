@@ -111,7 +111,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return p_min - 0.1  # Ensure p_min is greater than 0.1 kN/m²
+        return p_min - 0.5  # Ensure p_min is greater than 0.5 kN/m²
 
     def constraint_theta(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
@@ -195,14 +195,55 @@ h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.7)
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
+def display_results_in_table(result_text):
+    rows = result_text.split('\n')
+    table_rows = []
+    current_section = None
+
+    for row in rows:
+        if "foundation dimensions and weights:" in row:
+            current_section = "Dimensions and Weights"
+            table_rows.append(["Parameter", "Value"])
+        elif "Total weight:" in row:
+            current_section = "Results"
+            table_rows.append(["Parameter", "Value"])
+            table_rows.append(["Total weight", row.split(":")[1].strip()])
+        elif "p_min:" in row:
+            table_rows.append(["p_min", row.split(":")[1].strip()])
+        elif "p_max:" in row:
+            table_rows.append(["p_max", row.split(":")[1].strip()])
+        elif "B_wet:" in row:
+            table_rows.append(["B_wet", row.split(":")[1].strip()])
+        elif "W:" in row:
+            table_rows.append(["W", row.split(":")[1].strip()])
+        elif "F_z:" in row:
+            table_rows.append(["F_z", row.split(":")[1].strip()])
+        elif "net_load:" in row:
+            table_rows.append(["net_load", row.split(":")[1].strip()])
+        elif current_section == "Dimensions and Weights" and ":" in row:
+            parameter, value = row.split("=")
+            table_rows.append([parameter.strip(), value.strip()])
+
+    return table_rows
+
+def display_markdown_table(rows):
+    table = "| Parameter | Value |\n|-----------|-------|\n"
+    for row in rows:
+        table += f"| {row[0]} | {row[1]} |\n"
+    return table
+
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
-    st.markdown(result_output)
+    rows = display_results_in_table(result_output)
+    markdown_table = display_markdown_table(rows)
+    st.markdown(markdown_table)
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
-    st.markdown(result_output)
+    rows = display_results_in_table(result_output)
+    markdown_table = display_markdown_table(rows)
+    st.markdown(markdown_table)
     if fig is not None:
         st.pyplot(fig)
