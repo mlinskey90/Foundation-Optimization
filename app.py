@@ -191,18 +191,18 @@ h4 = st.sidebar.number_input('h4 (m)', value=0.1)
 h5 = st.sidebar.number_input('h5 (m)', value=0.25)
 b1 = st.sidebar.number_input('b1 (m)', value=6.0)
 b2 = st.sidebar.number_input('b2 (m)', value=5.5)
-h_anchor = st.sidebar.number_input('h_anchor (m)', value=2.7)
+h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.7)
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
-    st.text(result_output)
+    st.markdown(result_output)
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
-    st.text(result_output)
+    st.markdown(result_output)
     if fig is not None:
         st.pyplot(fig)
