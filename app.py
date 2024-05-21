@@ -41,23 +41,18 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
 
-    # Define a function to plot a single foundation
     def plot_foundation(params, edgecolor, fillcolor, label):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
-        # Section 1 - The plinth
         plinth_x = [-d2/2, d2/2, d2/2, -d2/2, -d2/2]
         plinth_y = [h1+h2+h3, h1+h2+h3, h1+h2, h1+h2, h1+h2+h3]
 
-        # Section 2 - The haunch
         haunch_x = [-d1/2, d1/2, d2/2, -d2/2, -d1/2]
         haunch_y = [h1, h1, h1+h2, h1+h2, h1]
 
-        # Section 3 - The main slab
         slab_x = [-d1/2, d1/2, d1/2, -d1/2, -d1/2]
         slab_y = [0, 0, h1, h1, 0]
 
-        # Section 4 - The downstand
         downstand_x = [-b1/2, -b2/2, b2/2, b1/2, -b1/2]
         downstand_y = [0, -h5, -h5, 0, 0]
 
@@ -71,10 +66,7 @@ def plot_foundation_comparison(original_params, optimized_params):
         ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
         ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
 
-    # Plot original foundation
     plot_foundation(original_params, 'black', 'grey', 'Original')
-
-    # Plot optimized foundation
     plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
 
     ax.set_aspect('equal')
@@ -82,8 +74,6 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.ylabel('Height (m)')
     plt.legend()
     plt.title('Foundation Comparison')
-    plt.show()
-
     return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
@@ -145,7 +135,6 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             {'type': 'ineq', 'fun': constraint_anchor}]
 
     try:
-        # Using 'trust-constr' method as an alternative
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
                           bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
 
@@ -174,10 +163,46 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
                              f"F_z: {F_z:.2f} kN\n"
                              f"net_load: {net_load:.2f} kN")
 
-            # Plot the original and optimized foundation dimensions
             fig = plot_foundation_comparison(initial_params, params)
             return result_output, fig
         else:
             return f"Optimization failed: {result.message}", None
     except Exception as e:
         return f"Optimization failed due to an exception: {e}", None
+
+# Streamlit Interface
+st.title("Foundation Optimization")
+
+st.sidebar.header("Input Parameters")
+F_z = st.sidebar.number_input('F_z (kN)', value=3300.0)
+F_RES = st.sidebar.number_input('F_RES (kN)', value=511.9)
+M_z = st.sidebar.number_input('M_z (kNm)', value=2264.2)
+M_RES = st.sidebar.number_input('M_RES (kNm)', value=39122.08)
+q_max = st.sidebar.number_input('q_max (kPa)', value=200.0)
+rho_conc = st.sidebar.number_input('rho_conc (kN/m³)', value=24.5)
+rho_ballast_wet = st.sidebar.number_input('rho_ballast_wet (kN/m³)', value=20.0)
+rho_ballast_dry = st.sidebar.number_input('rho_ballast_dry (kN/m³)', value=18.0)
+d1 = st.sidebar.number_input('d1 (m)', value=21.6)
+d2 = st.sidebar.number_input('d2 (m)', value=6.0)
+h1 = st.sidebar.number_input('h1 (m)', value=0.5)
+h2 = st.sidebar.number_input('h2 (m)', value=1.4)
+h3 = st.sidebar.number_input('h3 (m)', value=0.795)
+h4 = st.sidebar.number_input('h4 (m)', value=0.1)
+h5 = st.sidebar.number_input('h5 (m)', value=0.25)
+b1 = st.sidebar.number_input('b1 (m)', value=6.0)
+b2 = st.sidebar.number_input('b2 (m)', value=5.5)
+h_anchor = st.sidebar.number_input('h_anchor (m)', value=1.0)
+
+initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
+
+st.header("Run Calculations")
+if st.button("Run Calculations"):
+    result_output = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
+    st.text(result_output)
+
+st.header("Optimize Foundation")
+if st.button("Optimize Foundation"):
+    result_output, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+    st.text(result_output)
+    if fig is not None:
+        st.pyplot(fig)
