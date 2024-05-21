@@ -80,23 +80,18 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
 
-    result = (f"Calculated foundation dimensions and weights:\n"
-              f"d1 = {params[0]:.2f} m\n"
-              f"d2 = {params[1]:.2f} m\n"
-              f"h1 = {params[2]:.2f} m\n"
-              f"h2 = {params[3]:.2f} m\n"
-              f"h3 = {params[4]:.2f} m\n"
-              f"h4 = {params[5]:.2f} m\n"
-              f"h5 = {params[6]:.2f} m\n"
-              f"b1 = {params[7]:.2f} m\n"
-              f"b2 = {params[8]:.2f} m\n"
-              f"\nTotal weight: {total_weight:.2f} kN\n"
-              f"p_min: {p_min:.2f} kN/m²\n"
-              f"p_max: {p_max:.2f} kN/m²\n"
-              f"B_wet: {B_wet:.2f} kN\n"
-              f"W: {W:.2f} kN\n"
-              f"F_z: {F_z:.2f} kN\n"
-              f"net_load: {net_load:.2f} kN")
+    result = {
+        "Parameter": [
+            "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
+            "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
+        ],
+        "Value": [
+            f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
+            f"{params[5]:.2f} m", f"{params[6]:.2f} m", f"{params[7]:.2f} m", f"{params[8]:.2f} m",
+            f"{total_weight:.2f} kN", f"{p_min:.2f} kN/m²", f"{p_max:.2f} kN/m²", f"{B_wet:.2f} kN", f"{W:.2f} kN",
+            f"{F_z:.2f} kN", f"{net_load:.2f} kN"
+        ]
+    }
 
     return result
 
@@ -144,31 +139,25 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
             p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
 
-            result_output = (f"Optimized foundation dimensions and weights:\n"
-                             f"d1 = {params[0]:.2f} m\n"
-                             f"d2 = {params[1]:.2f} m\n"
-                             f"h1 = {params[2]:.2f} m\n"
-                             f"h2 = {params[3]:.2f} m\n"
-                             f"h3 = {params[4]:.2f} m\n"
-                             f"h4 = {params[5]:.2f} m\n"
-                             f"h5 = {params[6]:.2f} m\n"
-                             f"b1 = {params[7]:.2f} m\n"
-                             f"b2 = {params[8]:.2f} m\n"
-                             f"h_anchor = {h_anchor:.2f} m\n"
-                             f"\nTotal weight: {total_weight:.2f} kN\n"
-                             f"p_min: {p_min:.2f} kN/m²\n"
-                             f"p_max: {p_max:.2f} kN/m²\n"
-                             f"B_wet: { B_wet:.2f} kN\n"
-                             f"W: {W:.2f} kN\n"
-                             f"F_z: {F_z:.2f} kN\n"
-                             f"net_load: {net_load:.2f} kN")
+            result_output = {
+                "Parameter": [
+                    "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
+                    "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
+                ],
+                "Value": [
+                    f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
+                    f"{params[5]:.2f} m", f"{params[6]:.2f} m", f"{params[7]:.2f} m", f"{params[8]:.2f} m",
+                    f"{total_weight:.2f} kN", f"{p_min:.2f} kN/m²", f"{p_max:.2f} kN/m²", f"{B_wet:.2f} kN", f"{W:.2f} kN",
+                    f"{F_z:.2f} kN", f"{net_load:.2f} kN"
+                ]
+            }
 
             fig = plot_foundation_comparison(initial_params, params)
             return result_output, fig
         else:
-            return f"Optimization failed: {result.message}", None
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None
     except Exception as e:
-        return f"Optimization failed due to an exception: {e}", None
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -195,55 +184,14 @@ h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.7)
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
-def display_results_in_table(result_text):
-    rows = result_text.split('\n')
-    table_rows = []
-    current_section = None
-
-    for row in rows:
-        if "foundation dimensions and weights:" in row:
-            current_section = "Dimensions and Weights"
-            table_rows.append(["Parameter", "Value"])
-        elif "Total weight:" in row:
-            current_section = "Results"
-            table_rows.append(["Parameter", "Value"])
-            table_rows.append(["Total weight", row.split(":")[1].strip()])
-        elif "p_min:" in row:
-            table_rows.append(["p_min", row.split(":")[1].strip()])
-        elif "p_max:" in row:
-            table_rows.append(["p_max", row.split(":")[1].strip()])
-        elif "B_wet:" in row:
-            table_rows.append(["B_wet", row.split(":")[1].strip()])
-        elif "W:" in row:
-            table_rows.append(["W", row.split(":")[1].strip()])
-        elif "F_z:" in row:
-            table_rows.append(["F_z", row.split(":")[1].strip()])
-        elif "net_load:" in row:
-            table_rows.append(["net_load", row.split(":")[1].strip()])
-        elif current_section == "Dimensions and Weights" and ":" in row:
-            parameter, value = row.split("=")
-            table_rows.append([parameter.strip(), value.strip()])
-
-    return table_rows
-
-def display_markdown_table(rows):
-    table = "| Parameter | Value |\n|-----------|-------|\n"
-    for row in rows:
-        table += f"| {row[0]} | {row[1]} |\n"
-    return table
-
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
-    rows = display_results_in_table(result_output)
-    markdown_table = display_markdown_table(rows)
-    st.markdown(markdown_table)
+    st.table(result_output)
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
-    rows = display_results_in_table(result_output)
-    markdown_table = display_markdown_table(rows)
-    st.markdown(markdown_table)
+    st.table(result_output)
     if fig is not None:
         st.pyplot(fig)
