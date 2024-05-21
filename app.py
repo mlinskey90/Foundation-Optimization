@@ -94,7 +94,9 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
         ]
     }
 
-    return result
+    concrete_volume = (C1 + C2 + C3 + C4) / rho_conc
+
+    return result, concrete_volume
 
 def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
@@ -153,12 +155,13 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
                 ]
             }
 
+            optimized_concrete_volume = (C1 + C2 + C3 + C4) / rho_conc
             fig = plot_foundation_comparison(initial_params, params)
-            return result_output, fig
+            return result_output, optimized_concrete_volume, fig
         else:
-            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
     except Exception as e:
-        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -187,14 +190,25 @@ initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
 st.header("Run Calculations")
 if st.button("Run Calculations"):
-    result_output = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
+    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df, use_container_width=True)
+    st.subheader("Concrete Volume")
+    st.write(f"Original Concrete Volume: {original_concrete_volume:.2f} m³")
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
-    result_output, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df, use_container_width=True)
     if fig is not None:
         st.pyplot(fig)
+        st.subheader("Concrete Volume Comparison")
+        st.write(f"Original Concrete Volume: {original_concrete_volume:.2f} m³")
+        st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.2f} m³")
+        # Bar chart for concrete volume comparison
+        volume_data = pd.DataFrame({
+            'Volume': ['Original', 'Optimized'],
+            'Concrete Volume (m³)': [original_concrete_volume, optimized_concrete_volume]
+        })
+        st.bar_chart(volume_data.set_index('Volume'))
