@@ -166,6 +166,10 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
 # Streamlit Interface
 st.title("Foundation Optimization")
 
+# Load and display the image above the "Run Calculations" button
+image_path = "foundation.PNG"
+st.image(image_path, caption="Foundation Diagram", use_column_width=True)
+
 st.sidebar.header("Input Parameters")
 F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.0)
 F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.9)
