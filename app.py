@@ -87,7 +87,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
-            f"{params[0]:.2f} m", f"{params[1]::.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
+            f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
             f"{params[5]:.2f} m", f"{params[6]:.2f} m", f"{params[7]:.2f} m", f"{params[8]:.2f} m",
             f"{total_weight:.2f} kN", f"{p_min:.2f} kN/m²", f"{p_max:.2f} kN/m²", f"{B_wet:.2f} kN", f"{W:.2f} kN",
             f"{F_z:.2f} kN", f"{net_load:.2f} kN"
@@ -189,12 +189,12 @@ st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     result_df = pd.DataFrame(result_output)
-    st.table(result_df)
+    st.dataframe(result_df, use_container_width=True)
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
-    st.table(result_df)
+    st.dataframe(result_df, use_container_width=True)
     if fig is not None:
         st.pyplot(fig)
