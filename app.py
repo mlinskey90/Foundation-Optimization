@@ -188,9 +188,14 @@ h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.7)
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
+# Initialize session state for original concrete volume
+if 'original_concrete_volume' not in st.session_state:
+    st.session_state['original_concrete_volume'] = None
+
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
+    st.session_state['original_concrete_volume'] = original_concrete_volume  # Store the original concrete volume in session state
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     st.subheader("Concrete Volume")
@@ -204,10 +209,12 @@ if st.button("Optimize Foundation"):
     if fig is not None:
         st.pyplot(fig)
         st.subheader("Concrete Volume Comparison")
-        st.write(f"Original Concrete Volume: {original_concrete_volume:.2f} m³")
+        if st.session_state['original_concrete_volume'] is not None:
+            st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.2f} m³")
         st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.2f} m³")
-        volume_data = pd.DataFrame({
-            'Volume': ['Original', 'Optimized'],
-            'Concrete Volume (m³)': [original_concrete_volume, optimized_concrete_volume]
-        })
-        st.bar_chart(volume_data.set_index('Volume'))
+        if st.session_state['original_concrete_volume'] is not None:
+            volume_data = pd.DataFrame({
+                'Volume': ['Original', 'Optimized'],
+                'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
+            })
+            st.bar_chart(volume_data.set_index('Volume'))
