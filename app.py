@@ -18,7 +18,7 @@ def calculate_foundation_weight(params, rho_conc):
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
     d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
     h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2 / rho_conc) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
+    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
     W = ((np.pi * d1**2 / 4) * h_water + (C4 / rho_conc)) * rho_water  # Corrected buoyancy force calculation
     return B_wet, W
 
