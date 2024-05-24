@@ -170,15 +170,26 @@ st.title("Foundation Optimization")
 image_path = "foundation.PNG"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
+import streamlit as st
+
 st.sidebar.header("Input Parameters")
+
+# Load Cases
+st.sidebar.subheader("Load Cases")
 F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.0)
 F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.9)
 M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.2)
 M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.08)
+
+# Material Properties
+st.sidebar.subheader("Material Properties")
 q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.0)
 rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.5)
 rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.0)
 rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.0)
+
+# Dimensions
+st.sidebar.subheader("Dimensions")
 d1 = st.sidebar.number_input('d1 (m)', value=21.6)
 d2 = st.sidebar.number_input('d2 (m)', value=6.0)
 h1 = st.sidebar.number_input('h1 (m)', value=0.5)
@@ -189,6 +200,9 @@ h5 = st.sidebar.number_input('h5 (m)', value=0.25)
 b1 = st.sidebar.number_input('b1 (m)', value=6.0)
 b2 = st.sidebar.number_input('b2 (m)', value=5.5)
 h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.7)
+
+initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
+
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
