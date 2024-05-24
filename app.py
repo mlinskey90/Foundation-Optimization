@@ -187,8 +187,11 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
             fig, ax = plt.subplots()
+            fig.patch.set_alpha(0.0)  # Make the figure background transparent
+            ax.patch.set_alpha(0.0)   # Make the axis background transparent
             bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-            ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
-            plt.xlabel('Concrete Volume (m³)')
-            plt.title('Concrete Volume Comparison')
+            ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='white')
+            plt.xlabel('Concrete Volume (m³)', color='white')
+            plt.title('Concrete Volume Comparison', color='white')
+            ax.tick_params(colors='white')  # Change the color of the ticks to white
             st.pyplot(fig)
