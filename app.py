@@ -234,10 +234,38 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-            # Plot horizontal bar chart with colors and embedded text
-            fig, ax = plt.subplots()
-            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-            ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
-            plt.xlabel('Concrete Volume (m³)')
-            plt.title('Concrete Volume Comparison')
-            st.pyplot(fig)
+           # Plot horizontal bar chart with colors and embedded text
+fig, ax = plt.subplots()
+
+# Define colors
+colors = ['#2ecc71', '#e74c3c']  # Green and Red
+
+# Create bars
+bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=colors)
+
+# Add bar labels
+ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='black', label_type='edge')
+
+# Remove spines
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.spines['bottom'].set_visible(False)
+
+# Remove gridlines
+ax.grid(False)
+
+# Set background color to white
+ax.set_facecolor('white')
+fig.patch.set_facecolor('white')
+
+# Set xlabel and title with clean font
+plt.xlabel('Concrete Volume (m³)', fontsize=12, fontweight='light')
+plt.title('Concrete Volume Comparison', fontsize=14, fontweight='light')
+
+# Adjust layout for a cleaner look
+plt.tight_layout()
+
+# Show the plot in Streamlit
+st.pyplot(fig)
+
