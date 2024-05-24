@@ -172,37 +172,39 @@ st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
 import streamlit as st
 
+import streamlit as st
+
 st.sidebar.header("Input Parameters")
 
 # Load Cases
 st.sidebar.subheader("Load Cases")
-F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.0)
-F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.9)
-M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.2)
-M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.08)
+col1, col2 = st.sidebar.beta_columns(2)
+F_z = col1.number_input(r'$F_z$ (kN)', value=3300.0)
+F_RES = col2.number_input(r'$F_{RES}$ (kN)', value=511.9)
+M_z = col1.number_input(r'$M_z$ (kNm)', value=2264.2)
+M_RES = col2.number_input(r'$M_{RES}$ (kNm)', value=39122.08)
 
 # Material Properties
 st.sidebar.subheader("Material Properties")
-q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.0)
-rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.5)
-rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.0)
-rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.0)
+col3, col4 = st.sidebar.beta_columns(2)
+q_max = col3.number_input(r'$q_{max}$ (kPa)', value=200.0)
+rho_conc = col4.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.5)
+rho_ballast_wet = col3.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.0)
+rho_ballast_dry = col4.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.0)
 
 # Dimensions
 st.sidebar.subheader("Dimensions")
-d1 = st.sidebar.number_input('d1 (m)', value=21.6)
-d2 = st.sidebar.number_input('d2 (m)', value=6.0)
-h1 = st.sidebar.number_input('h1 (m)', value=0.5)
-h2 = st.sidebar.number_input('h2 (m)', value=1.4)
-h3 = st.sidebar.number_input('h3 (m)', value=0.795)
-h4 = st.sidebar.number_input('h4 (m)', value=0.1)
-h5 = st.sidebar.number_input('h5 (m)', value=0.25)
-b1 = st.sidebar.number_input('b1 (m)', value=6.0)
-b2 = st.sidebar.number_input('b2 (m)', value=5.5)
-h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.7)
-
-initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
-
+col5, col6 = st.sidebar.beta_columns(2)
+d1 = col5.number_input('d1 (m)', value=21.6)
+d2 = col6.number_input('d2 (m)', value=6.0)
+h1 = col5.number_input('h1 (m)', value=0.5)
+h2 = col6.number_input('h2 (m)', value=1.4)
+h3 = col5.number_input('h3 (m)', value=0.795)
+h4 = col6.number_input('h4 (m)', value=0.1)
+h5 = col5.number_input('h5 (m)', value=0.25)
+b1 = col6.number_input('b1 (m)', value=6.0)
+b2 = col5.number_input('b2 (m)', value=5.5)
+h_anchor = col6.number_input(r'$h_{anchor}$ (m)', value=2.7)
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
