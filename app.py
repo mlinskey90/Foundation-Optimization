@@ -127,10 +127,21 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
         return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
 
+    def constraint_pmax_qmax(x):
+    # Define the parameters list using x and initial_params
+    params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+    
+    # Calculate pressures using the provided function
+    _, p_max, q_max, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+    
+    # Return the constraint: p_max should be less than q_max
+    return q_max - p_max
+
     cons = [{'type': 'ineq', 'fun': constraint_pmin},
             {'type': 'ineq', 'fun': constraint_theta},
             {'type': 'ineq', 'fun': constraint_h3},
             {'type': 'ineq', 'fun': constraint_anchor}]
+            {'type': 'ineq', 'fun': constraint_pmax_qmax}
 
     try:
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
