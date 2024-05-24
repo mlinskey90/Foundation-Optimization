@@ -9,59 +9,71 @@ plt.rcParams['font.sans-serif'] = ['Helvetica']
 plt.rcParams['font.family'] = 'sans-serif'
 
 # Define the necessary functions
-def calculate_volumes_and_weight(params, rho_conc):
+def calculate_foundation_weight(params, rho_conc):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
     C2 = (1/3) * np.pi * ((d1/2)**2 + (d1/2 * d2/2) + (d2/2)**2) * h2
     C3 = (np.pi * d2**2 / 4) * h3
     C4 = (1/3) * np.pi * ((b1/2)**2 + (b1/2 * b2/2) + (b2/2)**2) * h5
     total_weight = (C1 + C2 + C3 + C4) * rho_conc
+
     return total_weight, C1, C2, C3, C4
 
-def calculate_ballast_and_buoyancy(params, rho_ballast_wet, rho_water, rho_conc):
-    d1, d2, h1, h2, h3, h4, h5 = params[:7]
+def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
+    d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
     h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = ((np.pi * d1**2 / 4) * h_water) * rho_water + (rho_water/rho_conc)
+    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
+    W = ((np.pi * d1**2 / 4) * h_water + (C4 / rho_conc)) * rho_water  # Corrected buoyancy force calculation
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
-    total_weight, C1, C2, C3, C4 = calculate_volumes_and_weight(params, rho_conc)
-    B_wet, W = calculate_ballast_and_buoyancy(params, rho_ballast_wet, rho_water, rho_conc)
+    total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
+    B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
     return net_load, total_weight, B_wet, W
 
 def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
     d1 = params[0]
     vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
-    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])
+    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])  # M_RES2 = M_RES + F_RES x (h1 + h2 + h3)
     resultant_moment = M_RES2
+
     p_min = (vertical_load / (np.pi * d1**2 / 4)) - (resultant_moment / (np.pi * d1**3 / 32))
     p_max = (vertical_load / (np.pi * d1**2 / 4)) + (resultant_moment / (np.pi * d1**3 / 32))
+
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
+
     def plot_foundation(params, edgecolor, fillcolor, label):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
+
         plinth_x = [-d2/2, d2/2, d2/2, -d2/2, -d2/2]
         plinth_y = [h1+h2+h3, h1+h2+h3, h1+h2, h1+h2, h1+h2+h3]
+
         haunch_x = [-d1/2, d1/2, d2/2, -d2/2, -d1/2]
         haunch_y = [h1, h1, h1+h2, h1+h2, h1]
+
         slab_x = [-d1/2, d1/2, d1/2, -d1/2, -d1/2]
         slab_y = [0, 0, h1, h1, 0]
+
         downstand_x = [-b1/2, -b2/2, b2/2, b1/2, -b1/2]
         downstand_y = [0, -h5, -h5, 0, 0]
+
         ax.plot(plinth_x, plinth_y, color=edgecolor)
         ax.plot(haunch_x, haunch_y, color=edgecolor)
         ax.plot(slab_x, slab_y, color=edgecolor)
         ax.plot(downstand_x, downstand_y, color=edgecolor)
+
         ax.fill(plinth_x, plinth_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor, label=label)
         ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
         ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
         ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
+
     plot_foundation(original_params, 'black', 'grey', 'Original')
     plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
+
     ax.set_aspect('equal')
     plt.xlabel('Width (m)')
     plt.ylabel('Height (m)')
@@ -70,54 +82,91 @@ def plot_foundation_comparison(original_params, optimized_params):
     return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
-    total_weight, C1, C2, C3, C4 = calculate_volumes_and_weight(params, rho_conc)
-    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+    total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
+    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
+
     result = {
-        "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"],
-        "Value": [f"{params[i]:.2f} m" for i in range(9)] + [f"{x:.2f} kN" for x in [total_weight, p_min, p_max, B_wet, W, F_z, net_load]]
+        "Parameter": [
+            "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
+            "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
+        ],
+        "Value": [
+            f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
+            f"{params[5]:.2f} m", f"{params[6]:.2f} m", f"{params[7]:.2f} m", f"{params[8]:.2f} m",
+            f"{total_weight:.2f} kN", f"{p_min:.2f} kN/m²", f"{p_max:.2f} kN/m²", f"{B_wet:.2f} kN", f"{W:.2f} kN",
+            f"{F_z:.2f} kN", f"{net_load:.2f} kN"
+        ]
     }
+
     concrete_volume = (C1 + C2 + C3 + C4)
+
     return result, concrete_volume
 
 def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
+
     def objective(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         _, _, _, _, _, total_weight = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
         return total_weight
+
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return p_min - 0.1
+        return p_min - 0.1  # Ensure p_min is greater than 0.1 kN/m²
+
     def constraint_theta(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         d1, d2, h2 = params[0], params[1], params[3]
         theta = np.degrees(np.arctan(h2 / ((d1 - d2) / 2)))
         return 13 - theta
+
     def constraint_h3(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         h3, h1, h2 = params[4], params[2], params[3]
         return (h1 + h2) - h3
+
     def constraint_anchor(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
         return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
-    cons = [{'type': 'ineq', 'fun': constraint_pmin}, {'type': 'ineq', 'fun': constraint_theta}, {'type': 'ineq', 'fun': constraint_h3}, {'type': 'ineq', 'fun': constraint_anchor}]
-    result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]], bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
-    if result.success:
-        optimized_params = result.x
-        params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        total_weight, C1, C2, C3, C4 = calculate_volumes_and_weight(params, rho_conc)
-        p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        result_output = {
-            "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"],
-            "Value": [f"{params[i]:.2f} m" for i in range(9)] + [f"{x:.2f} kN" for x in [total_weight, p_min, p_max, B_wet, W, F_z, net_load]]
-        }
-        optimized_concrete_volume = (C1 + C2 + C3 + C4)
-        fig = plot_foundation_comparison(initial_params, params)
-        return result_output, optimized_concrete_volume, fig
-    else:
-        return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+
+    cons = [{'type': 'ineq', 'fun': constraint_pmin},
+            {'type': 'ineq', 'fun': constraint_theta},
+            {'type': 'ineq', 'fun': constraint_h3},
+            {'type': 'ineq', 'fun': constraint_anchor}]
+            
+
+    try:
+        result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
+                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
+
+        if result.success:
+            optimized_params = result.x
+            params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+            total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
+            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
+
+            result_output = {
+                "Parameter": [
+                    "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
+                    "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
+                ],
+                "Value": [
+                    f"{params[0]:.2f} m", f"{params[1]:.2f} m", f"{params[2]:.2f} m", f"{params[3]:.2f} m", f"{params[4]:.2f} m",
+                    f"{params[5]:.2f} m", f"{params[6]:.2f} m", f"{params[7]:.2f} m", f"{params[8]:.2f} m",
+                    f"{total_weight:.2f} kN", f"{p_min:.2f} kN/m²", f"{p_max:.2f} kN/m²", f"{B_wet:.2f} kN", f"{W:.2f} kN",
+                    f"{F_z:.2f} kN", f"{net_load:.2f} kN"
+                ]
+            }
+
+            optimized_concrete_volume = (C1 + C2 + C3 + C4)
+            fig = plot_foundation_comparison(initial_params, params)
+            return result_output, optimized_concrete_volume, fig
+        else:
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+    except Exception as e:
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -186,13 +235,11 @@ if st.button("Optimize Foundation"):
                 'Volume': ['Original', 'Optimized'],
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
+
+          # Plot horizontal bar chart with colors and embedded text
             fig, ax = plt.subplots()
-            fig.patch.set_alpha(0.0)  # Make the figure background transparent
-            ax.patch.set_alpha(0.0)   # Make the axis background transparent
             bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-            ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='white')
-            plt.xlabel('Concrete Volume (m³)', color='white')
-            plt.title('Concrete Volume Comparison', color='white')
-            ax.tick_params(colors='white')  # Change the color of the ticks to white
-            plt.setp(ax.get_yticklabels(), color='white')  # Change the color of the y tick labels to white
+            ax.bar_label(bars, labels=[f"{v:.2f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
+            plt.xlabel('Concrete Volume (m³)')
+            plt.title('Concrete Volume Comparison')
             st.pyplot(fig)
