@@ -4,6 +4,10 @@ import streamlit as st
 from scipy.optimize import minimize
 import pandas as pd
 
+# Set the default font to Helvetica for matplotlib
+plt.rcParams['font.sans-serif'] = ['Helvetica']
+plt.rcParams['font.family'] = 'sans-serif'
+
 # Define the necessary functions
 def calculate_foundation_weight(params, rho_conc):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
@@ -171,8 +175,6 @@ st.title("Foundation Optimization")
 image_path = "foundation.PNG"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
-import streamlit as st
-
 st.sidebar.header("Input Parameters")
 
 # Load Cases
@@ -241,5 +243,3 @@ if st.button("Optimize Foundation"):
             plt.xlabel('Concrete Volume (m³)')
             plt.title('Concrete Volume Comparison')
             st.pyplot(fig)
-
-
