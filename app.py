@@ -187,30 +187,30 @@ st.sidebar.header("Input Parameters")
 
 # Load Cases
 st.sidebar.subheader("Load Cases")
-F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.000)
-F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.900)
-M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.200)
-M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080)
+F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.000, format="%.3f")
+F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.900, format="%.3f")
+M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.200, format="%.3f")
+M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080, format="%.3f")
 
 # Material Properties
 st.sidebar.subheader("Material Properties")
-q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000)
-rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500)
-rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000)
-rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000)
+q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f")
+rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
+rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
+rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
 
 # Dimensions
 st.sidebar.subheader("Dimensions")
-d1 = st.sidebar.number_input('d1 (m)', value=21.600)
-d2 = st.sidebar.number_input('d2 (m)', value=6.000)
-h1 = st.sidebar.number_input('h1 (m)', value=0.500)
-h2 = st.sidebar.number_input('h2 (m)', value=1.400)
-h3 = st.sidebar.number_input('h3 (m)', value=0.795)
-h4 = st.sidebar.number_input('h4 (m)', value=0.100)
-h5 = st.sidebar.number_input('h5 (m)', value=0.250)
-b1 = st.sidebar.number_input('b1 (m)', value=6.000)
-b2 = st.sidebar.number_input('b2 (m)', value=5.500)
-h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700)
+d1 = st.sidebar.number_input('d1 (m)', value=21.600, format="%.3f")
+d2 = st.sidebar.number_input('d2 (m)', value=6.000, format="%.3f")
+h1 = st.sidebar.number_input('h1 (m)', value=0.500, format="%.3f")
+h2 = st.sidebar.number_input('h2 (m)', value=1.400, format="%.3f")
+h3 = st.sidebar.number_input('h3 (m)', value=0.795, format="%.3f")
+h4 = st.sidebar.number_input('h4 (m)', value=0.100, format="%.3f")
+h5 = st.sidebar.number_input('h5 (m)', value=0.250, format="%.3f")
+b1 = st.sidebar.number_input('b1 (m)', value=6.000, format="%.3f")
+b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f")
+h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
