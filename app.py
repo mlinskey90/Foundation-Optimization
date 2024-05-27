@@ -244,20 +244,46 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-            # Plot horizontal bar chart with colors and embedded text
-            def plot_concrete_volume(volume_data):
-                fig, ax = plt.subplots()
-                bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+            import matplotlib.pyplot as plt
 
-                # Adding custom labels
-                for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
-                    width = bar.get_width()
-                    ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
+# Ensure that the Helvetica font is used
+plt.rcParams['font.sans-serif'] = ['Helvetica']
+plt.rcParams['font.family'] = 'sans-serif'
 
-                plt.xlabel('Concrete Volume (m³)')
-                plt.title('Concrete Volume Comparison')
-                return fig
+# Plot horizontal bar chart with colors and embedded text
+def plot_concrete_volume(volume_data):
+    fig, ax = plt.subplots()
 
-            # Plot and display in Streamlit
-            fig = plot_concrete_volume(volume_data)
-            st.pyplot(fig)
+    # Set the face and edge colors to transparent
+    fig.patch.set_alpha(0.0)
+    ax.patch.set_alpha(0.0)
+
+    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+
+    # Adding custom labels with white text color
+    for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
+        width = bar.get_width()
+        ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='white')
+
+    # Set the labels and title with white color
+    ax.set_xlabel('Concrete Volume (m³)', color='white')
+    ax.set_title('Concrete Volume Comparison', color='white')
+
+    # Set the tick params to have white color
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+
+    # Change the spine colors to white
+    ax.spines['top'].set_color('white')
+    ax.spines['bottom'].set_color('white')
+    ax.spines['left'].set_color('white')
+    ax.spines['right'].set_color('white')
+
+    return fig
+
+# Assuming 'volume_data' is your DataFrame
+volume_data = {'Volume': ['Optimized', 'Original'], 'Concrete Volume (m³)': [329.474, 443.890]}
+
+# Plot and display in Streamlit
+fig = plot_concrete_volume(volume_data)
+st.pyplot(fig)
