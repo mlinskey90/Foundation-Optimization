@@ -248,7 +248,7 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-            # Plot horizontal bar chart with colors and embedded text
+# Plot horizontal bar chart with colors and embedded text
             def plot_concrete_volume(volume_data):
                 fig, ax = plt.subplots()
                 bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
