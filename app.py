@@ -253,10 +253,14 @@ def plot_concrete_volume(volume_data):
 
     plt.xlabel('Concrete Volume (m³)')
     plt.title('Concrete Volume Comparison')
-    plt.show()
+
+    return fig
 
 # Example usage
 volume_data = {'Volume': ['A', 'B'], 'Concrete Volume (m³)': [10.5, 15.3]}
-plot_concrete_volume(volume_data)
+fig = plot_concrete_volume(volume_data)
+
+# Display the plot in Streamlit
+st.pyplot(fig)
 
 
