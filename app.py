@@ -245,9 +245,22 @@ if st.button("Optimize Foundation"):
             })
 
 # Plot horizontal bar chart with colors and embedded text
-            fig, ax = plt.subplots()
-            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-            ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
-            plt.xlabel('Concrete Volume (m³)')
-            plt.title('Concrete Volume Comparison')
-            st.pyplot(fig)
+# Assuming 'volume_data' is your DataFrame
+volume_data = {'Volume': ['Optimized', 'Original'], 'Concrete Volume (m³)': [329.474, 443.890]}
+
+def plot_concrete_volume(volume_data):
+    fig, ax = plt.subplots()
+    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['green', 'red'])
+
+    # Adding custom labels
+    for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
+        width = bar.get_width()
+        ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
+
+    plt.xlabel('Concrete Volume (m³)')
+    plt.title('Concrete Volume Comparison')
+    return fig
+
+# Plot and display in Streamlit
+fig = plot_concrete_volume(volume_data)
+st.pyplot(fig)
