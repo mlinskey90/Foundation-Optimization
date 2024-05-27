@@ -24,11 +24,10 @@ def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, r
     h_water = h1 + h2 + h3 - h4
     buoyancy_volume = (np.pi * d1**2 / 4) * h_water
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = (buoyancy_volume + (C4 / rho_conc)) * rho_water
+    W = (buoyancy_volume + (C4)) * rho_water
     
     print(f"h_water: {h_water:.3f}")
     print(f"Buoyancy Volume: {buoyancy_volume:.3f}")
-    print(f"Adjusted C4: {(C4 / rho_conc):.3f}")
     print(f"W: {W:.3f}")
 
     return B_wet, W, h_water, buoyancy_volume, C4 / rho_conc
