@@ -244,23 +244,10 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-def plot_concrete_volume(volume_data):
-    fig, ax = plt.subplots()
-    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-
-    # Adding bar labels centered within the bars
-    ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black', label_type='center')
-
-    plt.xlabel('Concrete Volume (m³)')
-    plt.title('Concrete Volume Comparison')
-
-    return fig
-
-# Example usage
-volume_data = {'Volume': ['A', 'B'], 'Concrete Volume (m³)': [10.5, 15.3]}
-fig = plot_concrete_volume(volume_data)
-
-# Display the plot in Streamlit
-st.pyplot(fig)
-
-
+# Plot horizontal bar chart with colors and embedded text
+            fig, ax = plt.subplots()
+            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+            ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
+            plt.xlabel('Concrete Volume (m³)')
+            plt.title('Concrete Volume Comparison')
+            st.pyplot(fig)
