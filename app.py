@@ -94,11 +94,13 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
     result = {
         "Parameter": [
             "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
+            "C1", "C2", "C3", "C4",
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
             f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
+            f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
             f"{F_z:.3f} kN", f"{net_load:.3f} kN"
         ]
@@ -185,9 +187,9 @@ st.sidebar.header("Input Parameters")
 
 # Load Cases
 st.sidebar.subheader("Load Cases")
-F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.390)
-F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.910)
-M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.150)
+F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.000)
+F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.900)
+M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.200)
 M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080)
 
 # Material Properties
