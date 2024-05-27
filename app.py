@@ -244,17 +244,19 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-         import matplotlib.pyplot as plt
+def plot_concrete_volume(volume_data):
+    fig, ax = plt.subplots()
+    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
 
-# Assuming 'volume_data' is your DataFrame
+    # Adding bar labels centered within the bars
+    ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black', label_type='center')
+
+    plt.xlabel('Concrete Volume (m³)')
+    plt.title('Concrete Volume Comparison')
+    plt.show()
+
+# Example usage
 volume_data = {'Volume': ['A', 'B'], 'Concrete Volume (m³)': [10.5, 15.3]}
-fig, ax = plt.subplots()
-bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+plot_concrete_volume(volume_data)
 
-# Adding bar labels centered within the bars
-ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black', label_type='center')
-
-plt.xlabel('Concrete Volume (m³)')
-plt.title('Concrete Volume Comparison')
-plt.show()
 
