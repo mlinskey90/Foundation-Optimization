@@ -244,10 +244,17 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-          # Plot horizontal bar chart with colors and embedded text
-            fig, ax = plt.subplots()
-            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-            ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black')
-            plt.xlabel('Concrete Volume (m³)')
-            plt.title('Concrete Volume Comparison')
-            st.pyplot(fig)
+         import matplotlib.pyplot as plt
+
+# Assuming 'volume_data' is your DataFrame
+volume_data = {'Volume': ['A', 'B'], 'Concrete Volume (m³)': [10.5, 15.3]}
+fig, ax = plt.subplots()
+bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+
+# Adding bar labels centered within the bars
+ax.bar_label(bars, labels=[f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']], color='black', label_type='center')
+
+plt.xlabel('Concrete Volume (m³)')
+plt.title('Concrete Volume Comparison')
+plt.show()
+
