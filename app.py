@@ -22,32 +22,26 @@ def calculate_foundation_weight(params, rho_conc):
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
     d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
     h_water = h1 + h2 + h3 - h4
-    buoyancy_volume = (np.pi * d1**2 / 4) * h_water
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = (buoyancy_volume + (C4)) * rho_water
-    
-    print(f"h_water: {h_water:.3f}")
-    print(f"Buoyancy Volume: {buoyancy_volume:.3f}")
-    print(f"W: {W:.3f}")
-
-    return B_wet, W, h_water, buoyancy_volume, C4 / rho_conc
+    W = (((np.pi * (d1 ** 2)) / 4) * h_water + (C4)) * rho_water
+    return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    B_wet, W, h_water, buoyancy_volume, adjusted_C4 = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
+    B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
-    return net_load, total_weight, B_wet, W, h_water, buoyancy_volume, adjusted_C4
+    return net_load, total_weight, B_wet, W
 
 def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
     d1 = params[0]
-    vertical_load, total_weight, B_wet, W, h_water, buoyancy_volume, adjusted_C4 = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
+    vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
     M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])  # M_RES2 = M_RES + F_RES x (h1 + h2 + h3)
     resultant_moment = M_RES2
 
     p_min = (vertical_load / (np.pi * d1**2 / 4)) - (resultant_moment / (np.pi * d1**3 / 32))
     p_max = (vertical_load / (np.pi * d1**2 / 4)) + (resultant_moment / (np.pi * d1**3 / 32))
 
-    return p_min, p_max, B_wet, W, vertical_load, total_weight, h_water, buoyancy_volume, adjusted_C4
+    return p_min, p_max, B_wet, W, vertical_load, total_weight
 
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
@@ -89,22 +83,20 @@ def plot_foundation_comparison(original_params, optimized_params):
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    p_min, p_max, B_wet, W, net_load, total_weight, h_water, buoyancy_volume, adjusted_C4 = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
 
     result = {
         "Parameter": [
             "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
             "C1", "C2", "C3", "C4",
-            "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load",
-            "h_water", "Buoyancy Volume", "Adjusted C4"
+            "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
             f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
-            f"{F_z:.3f} kN", f"{net_load:.3f} kN",
-            f"{h_water:.3f} m", f"{buoyancy_volume:.3f} m³", f"{adjusted_C4:.3f} m³"
+            f"{F_z:.3f} kN", f"{net_load:.3f} kN"
         ]
     }
 
@@ -123,7 +115,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return p_min - 0  # Ensure p_min is greater than 0.00 kN/m²
+        return p_min - 0.1  # Ensure p_min is greater than 0.1 kN/m²
 
     def constraint_theta(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
@@ -155,20 +147,18 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             optimized_params = result.x
             params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
             total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-            p_min, p_max, B_wet, W, net_load, total_weight, h_water, buoyancy_volume, adjusted_C4 = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
 
             result_output = {
                 "Parameter": [
                     "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
-                    "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load",
-                    "h_water", "Buoyancy Volume", "Adjusted C4"
+                    "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
                 ],
                 "Value": [
                     f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
                     f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
                     f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
-                    f"{F_z:.3f} kN", f"{net_load:.3f} kN",
-                    f"{h_water:.3f} m", f"{buoyancy_volume:.3f} m³", f"{adjusted_C4:.3f} m³"
+                    f"{F_z:.3f} kN", f"{net_load:.3f} kN"
                 ]
             }
 
