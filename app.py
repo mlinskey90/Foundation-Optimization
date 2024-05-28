@@ -4,6 +4,8 @@ import streamlit as st
 from scipy.optimize import minimize
 import pandas as pd
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+pip install plotly
+
 
 # Set the default font to Helvetica for matplotlib
 plt.rcParams['font.sans-serif'] = ['Helvetica']
@@ -86,17 +88,8 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-def create_cylinder(radius, height, z_offset, num_sides=50):
+def create_cylinder(radius_top, radius_bottom, height, z_offset, num_sides=50):
     theta = np.linspace(0, 2 * np.pi, num_sides)
-    x = radius * np.cos(theta)
-    y = radius * np.sin(theta)
-    z = np.full_like(x, z_offset)
-    return np.vstack((x, y, z)).T
-
-def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
-    num_sides = 50
-    theta = np.linspace(0, 2 * np.pi, num_sides)
-    
     x_top = radius_top * np.cos(theta)
     y_top = radius_top * np.sin(theta)
     z_top = np.full_like(x_top, z_offset + height)
@@ -105,26 +98,22 @@ def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
     y_bottom = radius_bottom * np.sin(theta)
     z_bottom = np.full_like(x_bottom, z_offset)
     
-    # Define faces
-    top_face = dict(type='mesh3d', x=x_top, y=y_top, z=z_top, color=color, opacity=0.5)
-    bottom_face = dict(type='mesh3d', x=x_bottom, y=y_bottom, z=z_bottom, color=color, opacity=0.5)
+    return x_top, y_top, z_top, x_bottom, y_bottom, z_bottom
+
+def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
+    x_top, y_top, z_top, x_bottom, y_bottom, z_bottom = create_cylinder(radius_top, radius_bottom, height, z_offset)
     
-    side_faces = []
+    # Define faces
+    fig.add_trace(go.Mesh3d(x=x_top, y=y_top, z=z_top, color=color, opacity=0.5, alphahull=0))
+    fig.add_trace(go.Mesh3d(x=x_bottom, y=y_bottom, z=z_bottom, color=color, opacity=0.5, alphahull=0))
+    
+    num_sides = len(x_top)
     for i in range(num_sides):
-        side_faces.append(dict(
-            type='mesh3d',
+        fig.add_trace(go.Mesh3d(
             x=[x_bottom[i], x_bottom[(i+1) % num_sides], x_top[(i+1) % num_sides], x_top[i]],
             y=[y_bottom[i], y_bottom[(i+1) % num_sides], y_top[(i+1) % num_sides], y_top[i]],
             z=[z_bottom[i], z_bottom[(i+1) % num_sides], z_top[(i+1) % num_sides], z_top[i]],
-            color=color,
-            opacity=0.5
-        ))
-    
-    # Add faces to the figure
-    fig.add_trace(go.Mesh3d(**top_face))
-    fig.add_trace(go.Mesh3d(**bottom_face))
-    for face in side_faces:
-        fig.add_trace(go.Mesh3d(**face))
+            color=color, opacity=0.5, alphahull=0))
 
 def plot_foundation_3d(params, title):
     fig = go.Figure()
@@ -141,7 +130,7 @@ def plot_foundation_3d(params, title):
             xaxis=dict(title='Width (m)'),
             yaxis=dict(title='Length (m)'),
             zaxis=dict(title='Height (m)'),
-            aspectratio=dict(x=1, y=1, z=1)
+            aspectmode='data'
         ),
         title=title,
         showlegend=False
@@ -152,7 +141,11 @@ def plot_foundation_3d(params, title):
 # Test the function
 params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
 fig = plot_foundation_3d(params, 'Optimized Foundation Geometry')
-fig.show()
+
+# Streamlit Interface
+st.title("Foundation Optimization")
+st.plotly_chart(fig)
+
 
 # Streamlit Interface
 st.title("Foundation Optimization")
