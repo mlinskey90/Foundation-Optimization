@@ -88,7 +88,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
-            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
+            f"{params[0]:.3f} m", f"{params[1]::.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
@@ -169,7 +169,7 @@ def plot_3d_foundation(params):
 
     fig = go.Figure()
 
-    def add_cylinder(fig, radius, height, z_shift, color):
+    def add_cylinder(fig, radius, height, z_shift, color, top=False):
         theta = np.linspace(0, 2 * np.pi, 100)
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
@@ -177,6 +177,8 @@ def plot_3d_foundation(params):
         Xc, Zc = np.meshgrid(x, z)
         Yc, Zc = np.meshgrid(y, z)
         fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+        if top:
+            fig.add_trace(go.Surface(x=Xc[:, :1], y=Yc[:, :1], z=Zc[:, :1] + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
 
     def add_conical_frustum(fig, r1, r2, height, z_shift, color):
         theta = np.linspace(0, 2 * np.pi, 100)
@@ -201,7 +203,7 @@ def plot_3d_foundation(params):
 
     add_cylinder(fig, d1 / 2, h1, 0, 'gray')  # slab
     add_conical_frustum(fig, d1 / 2, d2 / 2, h2, h1, 'gray')  # haunch
-    add_cylinder(fig, d2 / 2, h3, h1 + h2, 'gray')  # plinth
+    add_cylinder(fig, d2 / 2, h3, h1 + h2, 'gray', top=True)  # plinth
     add_conical_frustum(fig, b1 / 2, b2 / 2, 0, -h5, 'gray')  # downstand
 
     fig.update_layout(scene=dict(
