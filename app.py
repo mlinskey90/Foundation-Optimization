@@ -5,8 +5,8 @@ from scipy.optimize import minimize
 import pandas as pd
 import plotly.graph_objects as go
 
-# Set the default font to Helvetica for matplotlib
-plt.rcParams['font.sans-serif'] = ['Helvetica']
+# Set the default font to Arial for matplotlib
+plt.rcParams['font.sans-serif'] = ['Arial']
 plt.rcParams['font.family'] = 'sans-serif'
 
 # Define the necessary functions
@@ -23,8 +23,9 @@ def calculate_foundation_weight(params, rho_conc):
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
     d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
     h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = (((np.pi * (d1 ** 2)) / 4) * h_water + (C4)) * rho_water
+    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
+    W = (((np.pi * (d1 ** 2)) / 4) * h_water + C4) * rho_water
+
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
@@ -141,7 +142,8 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             
     try:
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
-                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
+                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr',
+                          options={'hess': '2-point'})  # Add option to handle Hessian
 
         if result.success:
             optimized_params = result.x
