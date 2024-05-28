@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from scipy.optimize import minimize
 import pandas as pd
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import plotly.graph_objects as go
 
 # Set the default font to Helvetica for matplotlib
 plt.rcParams['font.sans-serif'] = ['Helvetica']
@@ -81,76 +81,6 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.legend()
     plt.title('Foundation Comparison')
     return fig
-
-import numpy as np
-import plotly.graph_objects as go
-import streamlit as st
-
-def create_cylinder(radius_top, radius_bottom, height, z_offset, num_sides=50):
-    theta = np.linspace(0, 2 * np.pi, num_sides)
-    x_top = radius_top * np.cos(theta)
-    y_top = radius_top * np.sin(theta)
-    z_top = np.full_like(x_top, z_offset + height)
-    
-    x_bottom = radius_bottom * np.cos(theta)
-    y_bottom = radius_bottom * np.sin(theta)
-    z_bottom = np.full_like(x_bottom, z_offset)
-    
-    return x_top, y_top, z_top, x_bottom, y_bottom, z_bottom
-
-def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
-    x_top, y_top, z_top, x_bottom, y_bottom, z_bottom = create_cylinder(radius_top, radius_bottom, height, z_offset)
-    
-    # Define faces
-    fig.add_trace(go.Mesh3d(x=x_top, y=y_top, z=z_top, color=color, opacity=0.5, alphahull=0))
-    fig.add_trace(go.Mesh3d(x=x_bottom, y=y_bottom, z=z_bottom, color=color, opacity=0.5, alphahull=0))
-    
-    num_sides = len(x_top)
-    for i in range(num_sides):
-        fig.add_trace(go.Mesh3d(
-            x=[x_bottom[i], x_bottom[(i+1) % num_sides], x_top[(i+1) % num_sides], x_top[i]],
-            y=[y_bottom[i], y_bottom[(i+1) % num_sides], y_top[(i+1) % num_sides], y_top[i]],
-            z=[z_bottom[i], z_bottom[(i+1) % num_sides], z_top[(i+1) % num_sides], z_top[i]],
-            color=color, opacity=0.5, alphahull=0))
-
-def plot_foundation_3d(params, title):
-    fig = go.Figure()
-    
-    d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
-    
-    plot_cylinder(fig, d1/2, d1/2, h1, 0, 'grey')          # Slab
-    plot_cylinder(fig, d1/2, d2/2, h2, h1, 'grey')         # Haunch
-    plot_cylinder(fig, d2/2, d2/2, h3, h1+h2, 'grey')      # Plinth
-    plot_cylinder(fig, b1/2, b2/2, h5, -h5, 'grey')        # Downstand (note the negative height)
-
-    fig.update_layout(
-        scene=dict(
-            xaxis=dict(title='Width (m)'),
-            yaxis=dict(title='Length (m)'),
-            zaxis=dict(title='Height (m)'),
-            aspectmode='data'
-        ),
-        title=title,
-        showlegend=False
-    )
-    
-    return fig
-
-# Test the function
-params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
-fig = plot_foundation_3d(params, 'Optimized Foundation Geometry')
-
-# Streamlit Interface
-st.title("Foundation Optimization")
-st.plotly_chart(fig)
-
-
-# Streamlit Interface
-st.title("Foundation Optimization")
-
-# Test displaying in Streamlit
-st.plotly_chart(fig)
-
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
@@ -242,6 +172,56 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     except Exception as e:
         return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None, None
 
+def create_cylinder(radius_top, radius_bottom, height, z_offset, num_sides=50):
+    theta = np.linspace(0, 2 * np.pi, num_sides)
+    x_top = radius_top * np.cos(theta)
+    y_top = radius_top * np.sin(theta)
+    z_top = np.full_like(x_top, z_offset + height)
+    
+    x_bottom = radius_bottom * np.cos(theta)
+    y_bottom = radius_bottom * np.sin(theta)
+    z_bottom = np.full_like(x_bottom, z_offset)
+    
+    return x_top, y_top, z_top, x_bottom, y_bottom, z_bottom
+
+def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
+    x_top, y_top, z_top, x_bottom, y_bottom, z_bottom = create_cylinder(radius_top, radius_bottom, height, z_offset)
+    
+    # Define faces
+    fig.add_trace(go.Mesh3d(x=x_top, y=y_top, z=z_top, color=color, opacity=0.5, alphahull=0))
+    fig.add_trace(go.Mesh3d(x=x_bottom, y=y_bottom, z=z_bottom, color=color, opacity=0.5, alphahull=0))
+    
+    num_sides = len(x_top)
+    for i in range(num_sides):
+        fig.add_trace(go.Mesh3d(
+            x=[x_bottom[i], x_bottom[(i+1) % num_sides], x_top[(i+1) % num_sides], x_top[i]],
+            y=[y_bottom[i], y_bottom[(i+1) % num_sides], y_top[(i+1) % num_sides], y_top[i]],
+            z=[z_bottom[i], z_bottom[(i+1) % num_sides], z_top[(i+1) % num_sides], z_top[i]],
+            color=color, opacity=0.5, alphahull=0))
+
+def plot_foundation_3d(params, title):
+    fig = go.Figure()
+    
+    d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
+    
+    plot_cylinder(fig, d1/2, d1/2, h1, 0, 'grey')          # Slab
+    plot_cylinder(fig, d1/2, d2/2, h2, h1, 'grey')         # Haunch
+    plot_cylinder(fig, d2/2, d2/2, h3, h1+h2, 'grey')      # Plinth
+    plot_cylinder(fig, b1/2, b2/2, h5, -h5, 'grey')        # Downstand (note the negative height)
+
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(title='Width (m)'),
+            yaxis=dict(title='Length (m)'),
+            zaxis=dict(title='Height (m)'),
+            aspectmode='data'
+        ),
+        title=title,
+        showlegend=False
+    )
+    
+    return fig
+
 # Streamlit Interface
 st.title("Foundation Optimization")
 
@@ -300,7 +280,7 @@ if st.button("Optimize Foundation"):
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig_2d is not None:
         st.pyplot(fig_2d)
-        st.pyplot(fig_3d)
+        st.plotly_chart(fig_3d)
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
