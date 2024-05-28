@@ -31,4 +31,3 @@ This repository contains a Streamlit app for optimizing foundation dimensions an
 3. **Install Dependencies**   
 ```bash
    pip install -r requirements.txt
-#Usage
