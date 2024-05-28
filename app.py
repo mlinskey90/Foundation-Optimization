@@ -82,22 +82,27 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.title('Foundation Comparison')
     return fig
 
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import streamlit as st
+
+def create_cylinder(radius, height, z_offset, num_sides=50):
+    theta = np.linspace(0, 2 * np.pi, num_sides)
+    x = radius * np.cos(theta)
+    y = radius * np.sin(theta)
+    z = np.full_like(x, z_offset)
+    return np.vstack((x, y, z)).T
+
 def plot_foundation_3d(params, title):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     
-    def create_cylinder(radius, height, z_offset, num_sides=50):
-        theta = np.linspace(0, 2 * np.pi, num_sides)
-        x = radius * np.cos(theta)
-        y = radius * np.sin(theta)
-        z = np.full_like(x, z_offset)
-        return np.vstack((x, y, z)).T
-    
-    def plot_cylinder(ax, radius, height, z_offset, color):
-        top_circle = create_cylinder(radius, height, z_offset)
-        bottom_circle = create_cylinder(radius, height, z_offset + height)
+    def plot_cylinder(ax, radius_top, radius_bottom, height, z_offset, color):
+        top_circle = create_cylinder(radius_top, height, z_offset)
+        bottom_circle = create_cylinder(radius_bottom, height, z_offset + height)
         
         ax.plot(top_circle[:, 0], top_circle[:, 1], top_circle[:, 2], color=color)
         ax.plot(bottom_circle[:, 0], bottom_circle[:, 1], bottom_circle[:, 2], color=color)
@@ -109,10 +114,10 @@ def plot_foundation_3d(params, title):
                     color=color)
     
     # Plot each section of the foundation
-    plot_cylinder(ax, d1/2, h1, 0, 'r')          # Slab
-    plot_cylinder(ax, d1/2, h2, h1, 'g')         # Haunch
-    plot_cylinder(ax, d2/2, h3, h1+h2, 'b')      # Plinth
-    plot_cylinder(ax, b1/2, -h5, 0, 'y')         # Downstand (note the negative height)
+    plot_cylinder(ax, d1/2, d1/2, h1, 0, 'r')          # Slab
+    plot_cylinder(ax, d1/2, d2/2, h2, h1, 'g')         # Haunch
+    plot_cylinder(ax, d2/2, d2/2, h3, h1+h2, 'b')      # Plinth
+    plot_cylinder(ax, b1/2, b2/2, h5, -h5, 'y')        # Downstand (note the negative height)
 
     ax.set_xlabel('Width (m)')
     ax.set_ylabel('Length (m)')
@@ -128,11 +133,6 @@ def plot_foundation_3d(params, title):
 # Test the function
 params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
 plot_foundation_3d(params, 'Optimized Foundation Geometry')
-
-# Test the function
-params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
-plot_foundation_3d(params, 'Optimized Foundation Geometry')
-
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
