@@ -93,7 +93,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
-            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]::.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
+            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
@@ -139,7 +139,6 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             {'type': 'ineq', 'fun': constraint_h3},
             {'type': 'ineq', 'fun': constraint_anchor}]
             
-
     try:
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
                           bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
@@ -165,62 +164,55 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
 
             optimized_concrete_volume = (C1 + C2 + C3 + C4)
             fig_2d = plot_foundation_comparison(initial_params, params)
-            fig_3d = plot_foundation_3d(params, 'Optimized Foundation Geometry')
+            fig_3d = plot_3d_foundation(params)
             return result_output, optimized_concrete_volume, fig_2d, fig_3d
         else:
             return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None
     except Exception as e:
         return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None, None
 
-def create_cylinder(radius_top, radius_bottom, height, z_offset, num_sides=50):
-    theta = np.linspace(0, 2 * np.pi, num_sides)
-    x_top = radius_top * np.cos(theta)
-    y_top = radius_top * np.sin(theta)
-    z_top = np.full_like(x_top, z_offset + height)
-    
-    x_bottom = radius_bottom * np.cos(theta)
-    y_bottom = radius_bottom * np.sin(theta)
-    z_bottom = np.full_like(x_bottom, z_offset)
-    
-    return x_top, y_top, z_top, x_bottom, y_bottom, z_bottom
-
-def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
-    x_top, y_top, z_top, x_bottom, y_bottom, z_bottom = create_cylinder(radius_top, radius_bottom, height, z_offset)
-    
-    # Define faces
-    fig.add_trace(go.Mesh3d(x=np.concatenate([x_top, x_bottom]),
-                            y=np.concatenate([y_top, y_bottom]),
-                            z=np.concatenate([z_top, z_bottom]),
-                            i=np.concatenate([np.arange(len(x_top) - 1), [len(x_top) - 1]]),
-                            j=np.concatenate([np.arange(1, len(x_top)), [0]]),
-                            k=np.concatenate([np.arange(1, len(x_top)), [0]] + len(x_top)),
-                            color=color, opacity=0.5))
-
-def plot_foundation_3d(params, title):
-    fig = go.Figure()
-    
+def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
-    
-    # Slab
-    plot_cylinder(fig, d1/2, d1/2, h1, 0, 'grey')
-    # Haunch
-    plot_cylinder(fig, d1/2, d2/2, h2, h1, 'grey')
-    # Plinth
-    plot_cylinder(fig, d2/2, d2/2, h3, h1+h2, 'grey')
-    # Downstand (conical frustum, upside down)
-    plot_cylinder(fig, b1/2, b2/2, h5, -h5, 'grey')
 
-    fig.update_layout(
-        scene=dict(
-            xaxis=dict(title='Width (m)'),
-            yaxis=dict(title='Length (m)'),
-            zaxis=dict(title='Height (m)'),
-            aspectmode='data'
-        ),
-        title=title,
-        showlegend=False
-    )
-    
+    fig = go.Figure()
+
+    def add_cylinder(fig, radius, height, z_shift, color):
+        theta = np.linspace(0, 2 * np.pi, 100)
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
+        z = np.linspace(0, height, 2)
+        Xc, Zc = np.meshgrid(x, z)
+        Yc, Zc = np.meshgrid(y, z)
+        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+
+    def add_conical_frustum(fig, r1, r2, height, z_shift, color):
+        theta = np.linspace(0, 2 * np.pi, 100)
+        x1 = r1 * np.cos(theta)
+        y1 = r1 * np.sin(theta)
+        x2 = r2 * np.cos(theta)
+        y2 = r2 * np.sin(theta)
+        z = np.array([0, height])
+        Xc, Zc = np.meshgrid(x1, z)
+        Yc, Zc = np.meshgrid(y1, z)
+        Xc[1, :] = x2
+        Yc[1, :] = y2
+        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+
+    add_cylinder(fig, d1/2, h1, 0, 'gray')  # slab
+    add_conical_frustum(fig, d1/2, d2/2, h2, h1, 'gray')  # haunch
+    add_cylinder(fig, d2/2, h3, h1 + h2, 'gray')  # plinth
+    add_conical_frustum(fig, b1/2, b2/2, h5, -h5, 'gray')  # downstand
+
+    fig.update_layout(scene=dict(
+        xaxis_title='Width (m)',
+        yaxis_title='Length (m)',
+        zaxis_title='Height (m)',
+        aspectmode='data'
+    ))
+
+    fig.update_traces(contours_z=dict(show=True, usecolormap=True, highlightcolor="limegreen", project_z=True))
+    fig.update_layout(title="Optimized Foundation Geometry")
+
     return fig
 
 # Streamlit Interface
@@ -281,7 +273,6 @@ if st.button("Optimize Foundation"):
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig_2d is not None:
         st.pyplot(fig_2d)
-        st.plotly_chart(fig_3d)
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -292,12 +283,10 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-            # Plot horizontal bar chart with colors and embedded text
             def plot_concrete_volume(volume_data):
                 fig, ax = plt.subplots()
                 bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
 
-                # Adding custom labels
                 for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
                     width = bar.get_width()
                     ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
@@ -306,6 +295,6 @@ if st.button("Optimize Foundation"):
                 plt.title('Concrete Volume Comparison')
                 return fig
 
-            # Plot and display in Streamlit
             fig = plot_concrete_volume(volume_data)
             st.pyplot(fig)
+        st.plotly_chart(fig_3d)
