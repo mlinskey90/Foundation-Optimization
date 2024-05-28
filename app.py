@@ -69,16 +69,16 @@ def plot_foundation_comparison(original_params, optimized_params):
     plot_foundation(original_params, 'black', 'rgba(128, 128, 128, 0.5)', 'Original')
     plot_foundation(optimized_params, 'green', 'rgba(144, 238, 144, 0.5)', 'Optimized')
 
-    max_height = max(original_params[2:5]) + max(original_params[5:7])
     fig.update_layout(
         title="Foundation Comparison",
         xaxis_title="Width (m)",
         yaxis_title="Height (m)",
         legend_title="Legend",
-        yaxis=dict(scaleanchor="x", scaleratio=1, range=[-max_height*0.1, max_height*1.1]),
+        yaxis=dict(scaleanchor="x", scaleratio=1, range=[-4, 4]),
         template="plotly_white",
         plot_bgcolor='white',
-        paper_bgcolor='white'
+        paper_bgcolor='white',
+        font=dict(color='black')  # Set text color to black
     )
 
     return fig
