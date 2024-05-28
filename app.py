@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from scipy.optimize import minimize
 import pandas as pd
-import plotly.graph_objects as go
 
-# Set the default font to Arial for matplotlib
-plt.rcParams['font.sans-serif'] = ['Arial']
+# Set the default font to Helvetica for matplotlib
+plt.rcParams['font.sans-serif'] = ['Helvetica']
 plt.rcParams['font.family'] = 'sans-serif'
 
 # Define the necessary functions
@@ -23,9 +22,8 @@ def calculate_foundation_weight(params, rho_conc):
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
     d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
     h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = (((np.pi * (d1 ** 2)) / 4) * h_water + C4) * rho_water
-
+    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
+    W = (((np.pi * (d1 ** 2)) / 4) * h_water + (C4)) * rho_water
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
@@ -140,10 +138,10 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             {'type': 'ineq', 'fun': constraint_h3},
             {'type': 'ineq', 'fun': constraint_anchor}]
             
+
     try:
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
-                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr',
-                          options={'hess': '2-point'})  # Add option to handle Hessian
+                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
 
         if result.success:
             optimized_params = result.x
@@ -165,57 +163,12 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             }
 
             optimized_concrete_volume = (C1 + C2 + C3 + C4)
-            fig_2d = plot_foundation_comparison(initial_params, params)
-            fig_3d = plot_3d_foundation(params)
-            return result_output, optimized_concrete_volume, fig_2d, fig_3d
+            fig = plot_foundation_comparison(initial_params, params)
+            return result_output, optimized_concrete_volume, fig
         else:
-            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
     except Exception as e:
-        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None, None
-
-def plot_3d_foundation(params):
-    d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
-
-    fig = go.Figure()
-
-    def add_cylinder(fig, radius, height, z_shift, color):
-        theta = np.linspace(0, 2 * np.pi, 100)
-        x = radius * np.cos(theta)
-        y = radius * np.sin(theta)
-        z = np.linspace(0, height, 2)
-        Xc, Zc = np.meshgrid(x, z)
-        Yc, Zc = np.meshgrid(y, z)
-        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
-
-    def add_conical_frustum(fig, r1, r2, height, z_shift, color):
-        theta = np.linspace(0, 2 * np.pi, 100)
-        x1 = r1 * np.cos(theta)
-        y1 = r1 * np.sin(theta)
-        x2 = r2 * np.cos(theta)
-        y2 = r2 * np.sin(theta)
-        z = np.array([0, height])
-        Xc, Zc = np.meshgrid(x1, z)
-        Yc, Zc = np.meshgrid(y1, z)
-        Xc[1, :] = x2
-        Yc[1, :] = y2
-        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
-
-    add_cylinder(fig, d1/2, h1, 0, 'gray')  # slab
-    add_conical_frustum(fig, d1/2, d2/2, h2, h1, 'gray')  # haunch
-    add_cylinder(fig, d2/2, h3, h1 + h2, 'gray')  # plinth
-    add_conical_frustum(fig, b1/2, b2/2, h5, -h5, 'gray')  # downstand
-
-    fig.update_layout(scene=dict(
-        xaxis_title='Width (m)',
-        yaxis_title='Length (m)',
-        zaxis_title='Height (m)',
-        aspectmode='data'
-    ))
-
-    fig.update_traces(contours_z=dict(show=True, usecolormap=True, highlightcolor="limegreen", project_z=True))
-    fig.update_layout(title="Optimized Foundation Geometry")
-
-    return fig
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -270,11 +223,11 @@ if st.button("Run Calculations"):
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
-    result_output, optimized_concrete_volume, fig_2d, fig_3d = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
-    if fig_2d is not None:
-        st.pyplot(fig_2d)
+    if fig is not None:
+        st.pyplot(fig)
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -285,10 +238,12 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
+# Plot horizontal bar chart with colors and embedded text
             def plot_concrete_volume(volume_data):
                 fig, ax = plt.subplots()
                 bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
 
+                # Adding custom labels
                 for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
                     width = bar.get_width()
                     ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
@@ -297,6 +252,6 @@ if st.button("Optimize Foundation"):
                 plt.title('Concrete Volume Comparison')
                 return fig
 
+            # Plot and display in Streamlit
             fig = plot_concrete_volume(volume_data)
             st.pyplot(fig)
-        st.plotly_chart(fig_3d)
