@@ -62,10 +62,13 @@ def plot_foundation_comparison(original_params, optimized_params):
         ax.plot(slab_x, slab_y, color=edgecolor)
         ax.plot(downstand_x, downstand_y, color=edgecolor)
 
-        ax.fill(plinth_x, plinth_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor, label=label)
-        ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
-        ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
-        ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
+        ax.fill(plinth_x, plinth_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor, label=label)
+        ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor)
+        ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor)
+        ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor)
+
+    # Set plot background to white for better visibility
+    ax.set_facecolor('white')
 
     plot_foundation(original_params, 'black', 'grey', 'Original')
     plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
@@ -76,6 +79,7 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.legend()
     plt.title('Foundation Comparison')
     return fig
+
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
