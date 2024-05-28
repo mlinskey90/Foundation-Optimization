@@ -39,47 +39,6 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
-import streamlit as st
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
-
-# Function definitions
-def calculate_foundation_weight(params, rho_conc):
-    d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
-    C1 = (np.pi * d1**2 / 4) * h1
-    C2 = (1/3) * np.pi * ((d1/2)**2 + (d1/2 * d2/2) + (d2/2)**2) * h2
-    C3 = (np.pi * d2**2 / 4) * h3
-    C4 = (1/3) * np.pi * ((b1/2)**2 + (b1/2 * b2/2) + (b2/2)**2) * h5
-    total_weight = (C1 + C2 + C3 + C4) * rho_conc
-    return total_weight, C1, C2, C3, C4
-
-def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
-    d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
-    h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = (((np.pi * (d1 ** 2)) / 4) * h_water + (C4)) * rho_water
-    return B_wet, W
-
-def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
-    total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
-    net_load = W + B_wet + total_weight + F_z
-    return net_load, total_weight, B_wet, W
-
-def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
-    d1 = params[0]
-    vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
-    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])  # M_RES2 = M_RES + F_RES x (h1 + h2 + h3)
-    resultant_moment = M_RES2
-
-    p_min = (vertical_load / (np.pi * d1**2 / 4)) - (resultant_moment / (np.pi * d1**3 / 32))
-    p_max = (vertical_load / (np.pi * d1**2 / 4)) + (resultant_moment / (np.pi * d1**3 / 32))
-
-    return p_min, p_max, B_wet, W, vertical_load, total_weight
-
 def plot_foundation_comparison(original_params, optimized_params):
     fig = go.Figure()
 
@@ -124,7 +83,7 @@ def plot_foundation_comparison(original_params, optimized_params):
             tickfont=dict(color='black'),
             scaleanchor="x",
             scaleratio=1,
-            range=[-4, 4]
+            range=[-1, 4]
         ),
         template="plotly_white",
         plot_bgcolor='white',
