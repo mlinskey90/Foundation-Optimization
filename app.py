@@ -88,56 +88,46 @@ def plot_foundation_3d(params, title):
     
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     
-    # Plinth
-    plinth_vertices = np.array([
-        [-d2/2, h1+h2+h3, -d2/2], [-d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, -d2/2],
-        [-d2/2, h1+h2, -d2/2], [-d2/2, h1+h2, d2/2], [d2/2, h1+h2, d2/2], [d2/2, h1+h2, -d2/2]
-    ])
+    def create_cylinder(radius, height, z_offset, num_sides=50):
+        theta = np.linspace(0, 2 * np.pi, num_sides)
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
+        z = np.full_like(x, z_offset)
+        return np.vstack((x, y, z)).T
     
-    # Haunch
-    haunch_vertices = np.array([
-        [-d1/2, h1, -d1/2], [-d1/2, h1, d1/2], [d1/2, h1, d1/2], [d1/2, h1, -d1/2],
-        [-d2/2, h1+h2, -d2/2], [-d2/2, h1+h2, d2/2], [d2/2, h1+h2, d2/2], [d2/2, h1+h2, -d2/2]
-    ])
+    def plot_cylinder(ax, radius, height, z_offset, color):
+        top_circle = create_cylinder(radius, height, z_offset)
+        bottom_circle = create_cylinder(radius, height, z_offset + height)
+        
+        ax.plot(top_circle[:, 0], top_circle[:, 1], top_circle[:, 2], color=color)
+        ax.plot(bottom_circle[:, 0], bottom_circle[:, 1], bottom_circle[:, 2], color=color)
+        
+        for i in range(len(top_circle)):
+            ax.plot([top_circle[i, 0], bottom_circle[i, 0]],
+                    [top_circle[i, 1], bottom_circle[i, 1]],
+                    [top_circle[i, 2], bottom_circle[i, 2]],
+                    color=color)
     
-    # Slab
-    slab_vertices = np.array([
-        [-d1/2, 0, -d1/2], [-d1/2, 0, d1/2], [d1/2, 0, d1/2], [d1/2, 0, -d1/2],
-        [-d1/2, h1, -d1/2], [-d1/2, h1, d1/2], [d1/2, h1, d1/2], [d1/2, h1, -d1/2]
-    ])
-    
-    # Downstand
-    downstand_vertices = np.array([
-        [-b1/2, 0, -b1/2], [-b1/2, 0, b1/2], [b1/2, 0, b1/2], [b1/2, 0, -b1/2],
-        [-b2/2, -h5, -b2/2], [-b2/2, -h5, b2/2], [b2/2, -h5, b2/2], [b2/2, -h5, -b2/2]
-    ])
-    
-    def plot_prism(vertices, color):
-        faces = [
-            [vertices[0], vertices[1], vertices[2], vertices[3]],  # Top face
-            [vertices[4], vertices[5], vertices[6], vertices[7]],  # Bottom face
-            [vertices[0], vertices[1], vertices[5], vertices[4]],  # Side face
-            [vertices[2], vertices[3], vertices[7], vertices[6]],  # Side face
-            [vertices[1], vertices[2], vertices[6], vertices[5]],  # Side face
-            [vertices[0], vertices[3], vertices[7], vertices[4]]   # Side face
-        ]
-        ax.add_collection3d(Poly3DCollection(faces, facecolors=color, linewidths=1, edgecolors='r', alpha=.25))
-    
-    plot_prism(plinth_vertices, 'grey')
-    plot_prism(haunch_vertices, 'grey')
-    plot_prism(slab_vertices, 'grey')
-    plot_prism(downstand_vertices, 'grey')
-    
+    # Plot each section of the foundation
+    plot_cylinder(ax, d1/2, h1, 0, 'r')          # Slab
+    plot_cylinder(ax, d1/2, h2, h1, 'g')         # Haunch
+    plot_cylinder(ax, d2/2, h3, h1+h2, 'b')      # Plinth
+    plot_cylinder(ax, b1/2, -h5, 0, 'y')         # Downstand (note the negative height)
+
     ax.set_xlabel('Width (m)')
-    ax.set_ylabel('Height (m)')
-    ax.set_zlabel('Depth (m)')
+    ax.set_ylabel('Length (m)')
+    ax.set_zlabel('Height (m)')
     ax.set_title(title)
     ax.set_xlim([-d1/2, d1/2])
-    ax.set_ylim([0, h1 + h2 + h3])
-    ax.set_zlim([-d1/2, d1/2])
+    ax.set_ylim([-d1/2, d1/2])
+    ax.set_zlim([0, h1 + h2 + h3])
     
     plt.show()
     return fig
+
+# Test the function
+params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
+plot_foundation_3d(params, 'Optimized Foundation Geometry')
 
 # Test the function
 params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
