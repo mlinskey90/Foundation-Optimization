@@ -184,12 +184,20 @@ def plot_3d_foundation(params):
         y1 = r1 * np.sin(theta)
         x2 = r2 * np.cos(theta)
         y2 = r2 * np.sin(theta)
-        z = np.array([0, height])
-        Xc, Zc = np.meshgrid(theta, z)
-        Yc, Zc = np.meshgrid(theta, z)
-        Xc[1, :] = x2
-        Yc[1, :] = y2
-        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+        z = np.linspace(0, height, 2)
+        X1, Z1 = np.meshgrid(x1, z)
+        Y1, Z1 = np.meshgrid(y1, z)
+        X2, Z2 = np.meshgrid(x2, z)
+        Y2, Z2 = np.meshgrid(y2, z)
+        for i in range(len(z)-1):
+            fig.add_trace(go.Mesh3d(
+                x=np.concatenate([X1[i], X1[i+1], X2[i+1], X2[i]]),
+                y=np.concatenate([Y1[i], Y1[i+1], Y2[i+1], Y2[i]]),
+                z=np.concatenate([Z1[i], Z1[i+1], Z2[i+1], Z2[i]]) + z_shift,
+                color=color,
+                opacity=0.6,
+                flatshading=True
+            ))
 
     add_cylinder(fig, d1 / 2, h1, 0, 'gray')  # slab
     add_conical_frustum(fig, d1 / 2, d2 / 2, h2, h1, 'gray')  # haunch
@@ -265,9 +273,8 @@ if st.button("Optimize Foundation"):
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig is not None:
-        st.pyplot(fig)
         st.plotly_chart(plot_3d_foundation(initial_params))
-        st.plotly_chart(plot_3d_foundation([optimized_concrete_volume] * 9))
+        st.plotly_chart(fig)  # Using plotly_chart to display Plotly figure
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -278,7 +285,7 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-# Plot horizontal bar chart with colors and embedded text
+            # Plot horizontal bar chart with colors and embedded text
             def plot_concrete_volume(volume_data):
                 fig, ax = plt.subplots()
                 bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
