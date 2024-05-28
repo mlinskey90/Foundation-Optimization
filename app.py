@@ -89,43 +89,60 @@ def plot_foundation_3d(params, title):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     
     # Plinth
-    plinth = np.array([
-        [-d2/2, h1+h2+h3, -d2/2], [-d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, -d2/2]
+    plinth_vertices = np.array([
+        [-d2/2, h1+h2+h3, -d2/2], [-d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, -d2/2],
+        [-d2/2, h1+h2, -d2/2], [-d2/2, h1+h2, d2/2], [d2/2, h1+h2, d2/2], [d2/2, h1+h2, -d2/2]
     ])
-    plinth_bottom = plinth.copy()
-    plinth_bottom[:, 1] = h1 + h2
-    ax.add_collection3d(Poly3DCollection([plinth, plinth_bottom], alpha=.25, facecolors='grey'))
     
     # Haunch
-    haunch = np.array([
-        [-d1/2, h1, -d1/2], [-d1/2, h1, d1/2], [d1/2, h1, d1/2], [d1/2, h1, -d1/2]
+    haunch_vertices = np.array([
+        [-d1/2, h1, -d1/2], [-d1/2, h1, d1/2], [d1/2, h1, d1/2], [d1/2, h1, -d1/2],
+        [-d2/2, h1+h2, -d2/2], [-d2/2, h1+h2, d2/2], [d2/2, h1+h2, d2/2], [d2/2, h1+h2, -d2/2]
     ])
-    haunch_top = haunch.copy()
-    haunch_top[:, 1] = h1 + h2
-    ax.add_collection3d(Poly3DCollection([haunch, haunch_top], alpha=.25, facecolors='grey'))
     
     # Slab
-    slab = np.array([
-        [-d1/2, 0, -d1/2], [-d1/2, 0, d1/2], [d1/2, 0, d1/2], [d1/2, 0, -d1/2]
+    slab_vertices = np.array([
+        [-d1/2, 0, -d1/2], [-d1/2, 0, d1/2], [d1/2, 0, d1/2], [d1/2, 0, -d1/2],
+        [-d1/2, h1, -d1/2], [-d1/2, h1, d1/2], [d1/2, h1, d1/2], [d1/2, h1, -d1/2]
     ])
-    slab_top = slab.copy()
-    slab_top[:, 1] = h1
-    ax.add_collection3d(Poly3DCollection([slab, slab_top], alpha=.25, facecolors='grey'))
     
     # Downstand
-    downstand = np.array([
-        [-b1/2, 0, -b1/2], [-b1/2, 0, b1/2], [b1/2, 0, b1/2], [b1/2, 0, -b1/2]
+    downstand_vertices = np.array([
+        [-b1/2, 0, -b1/2], [-b1/2, 0, b1/2], [b1/2, 0, b1/2], [b1/2, 0, -b1/2],
+        [-b2/2, -h5, -b2/2], [-b2/2, -h5, b2/2], [b2/2, -h5, b2/2], [b2/2, -h5, -b2/2]
     ])
-    downstand_bottom = downstand.copy()
-    downstand_bottom[:, 1] = -h5
-    ax.add_collection3d(Poly3DCollection([downstand, downstand_bottom], alpha=.25, facecolors='grey'))
+    
+    def plot_prism(vertices, color):
+        faces = [
+            [vertices[0], vertices[1], vertices[2], vertices[3]],  # Top face
+            [vertices[4], vertices[5], vertices[6], vertices[7]],  # Bottom face
+            [vertices[0], vertices[1], vertices[5], vertices[4]],  # Side face
+            [vertices[2], vertices[3], vertices[7], vertices[6]],  # Side face
+            [vertices[1], vertices[2], vertices[6], vertices[5]],  # Side face
+            [vertices[0], vertices[3], vertices[7], vertices[4]]   # Side face
+        ]
+        ax.add_collection3d(Poly3DCollection(faces, facecolors=color, linewidths=1, edgecolors='r', alpha=.25))
+    
+    plot_prism(plinth_vertices, 'grey')
+    plot_prism(haunch_vertices, 'grey')
+    plot_prism(slab_vertices, 'grey')
+    plot_prism(downstand_vertices, 'grey')
     
     ax.set_xlabel('Width (m)')
     ax.set_ylabel('Height (m)')
     ax.set_zlabel('Depth (m)')
     ax.set_title(title)
+    ax.set_xlim([-d1/2, d1/2])
+    ax.set_ylim([0, h1 + h2 + h3])
+    ax.set_zlim([-d1/2, d1/2])
+    
     plt.show()
     return fig
+
+# Test the function
+params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
+plot_foundation_3d(params, 'Optimized Foundation Geometry')
+
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
