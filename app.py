@@ -69,14 +69,12 @@ def plot_foundation_comparison(original_params, optimized_params):
     plot_foundation(original_params, 'black', 'rgba(128, 128, 128, 0.5)', 'Original')
     plot_foundation(optimized_params, 'green', 'rgba(144, 238, 144, 0.5)', 'Optimized')
 
-    max_width = max(original_params[0], original_params[1]) / 2
-
     fig.update_layout(
         title=dict(text="Foundation Comparison", font=dict(color='black')),
         xaxis=dict(
             title=dict(text="Width (m)", font=dict(color='black')),
             tickfont=dict(color='black'),
-            range=[-max_width, max_width]
+            range=[-15, 15]
         ),
         yaxis=dict(
             title=dict(text="Height (m)", font=dict(color='black')),
