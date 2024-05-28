@@ -42,6 +42,10 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
 
+    # Set background color to white
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
     def plot_foundation(params, edgecolor, fillcolor, label):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
@@ -66,9 +70,6 @@ def plot_foundation_comparison(original_params, optimized_params):
         ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor)
         ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor)
         ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.5, edgecolor=edgecolor)
-
-    # Set plot background to white for better visibility
-    ax.set_facecolor('white')
 
     plot_foundation(original_params, 'black', 'grey', 'Original')
     plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
