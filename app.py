@@ -39,7 +39,7 @@ def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water):
     - B_wet: wet ballast force (kN)
     - buoyancy: buoyant force (kN)
     """
-    d1, d2, h1, h2, h3, h4, _ = params
+    d1, d2, h1, h2, h3, h4, h5 = params[:7]
     h_water = h1 + h2 + h3 - h4
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
     buoyancy = (((np.pi * (d1 ** 2)) / 4) * h_water + C4) * rho_water
