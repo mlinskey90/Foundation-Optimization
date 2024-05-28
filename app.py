@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from scipy.optimize import minimize
 import pandas as pd
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # Set the default font to Helvetica for matplotlib
 plt.rcParams['font.sans-serif'] = ['Helvetica']
@@ -79,6 +80,51 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.ylabel('Height (m)')
     plt.legend()
     plt.title('Foundation Comparison')
+    return fig
+
+def plot_foundation_3d(params, title):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
+    
+    # Plinth
+    plinth = np.array([
+        [-d2/2, h1+h2+h3, -d2/2], [-d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, d2/2], [d2/2, h1+h2+h3, -d2/2]
+    ])
+    plinth_bottom = plinth.copy()
+    plinth_bottom[:, 1] = h1 + h2
+    ax.add_collection3d(Poly3DCollection([plinth, plinth_bottom], alpha=.25, facecolors='grey'))
+    
+    # Haunch
+    haunch = np.array([
+        [-d1/2, h1, -d1/2], [-d1/2, h1, d1/2], [d1/2, h1, d1/2], [d1/2, h1, -d1/2]
+    ])
+    haunch_top = haunch.copy()
+    haunch_top[:, 1] = h1 + h2
+    ax.add_collection3d(Poly3DCollection([haunch, haunch_top], alpha=.25, facecolors='grey'))
+    
+    # Slab
+    slab = np.array([
+        [-d1/2, 0, -d1/2], [-d1/2, 0, d1/2], [d1/2, 0, d1/2], [d1/2, 0, -d1/2]
+    ])
+    slab_top = slab.copy()
+    slab_top[:, 1] = h1
+    ax.add_collection3d(Poly3DCollection([slab, slab_top], alpha=.25, facecolors='grey'))
+    
+    # Downstand
+    downstand = np.array([
+        [-b1/2, 0, -b1/2], [-b1/2, 0, b1/2], [b1/2, 0, b1/2], [b1/2, 0, -b1/2]
+    ])
+    downstand_bottom = downstand.copy()
+    downstand_bottom[:, 1] = -h5
+    ax.add_collection3d(Poly3DCollection([downstand, downstand_bottom], alpha=.25, facecolors='grey'))
+    
+    ax.set_xlabel('Width (m)')
+    ax.set_ylabel('Height (m)')
+    ax.set_zlabel('Depth (m)')
+    ax.set_title(title)
+    plt.show()
     return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
@@ -163,12 +209,13 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             }
 
             optimized_concrete_volume = (C1 + C2 + C3 + C4)
-            fig = plot_foundation_comparison(initial_params, params)
-            return result_output, optimized_concrete_volume, fig
+            fig_2d = plot_foundation_comparison(initial_params, params)
+            fig_3d = plot_foundation_3d(params, 'Optimized Foundation Geometry')
+            return result_output, optimized_concrete_volume, fig_2d, fig_3d
         else:
-            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None
     except Exception as e:
-        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None, None
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -223,11 +270,12 @@ if st.button("Run Calculations"):
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
-    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+    result_output, optimized_concrete_volume, fig_2d, fig_3d = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
-    if fig is not None:
-        st.pyplot(fig)
+    if fig_2d is not None:
+        st.pyplot(fig_2d)
+        st.pyplot(fig_3d)
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -238,7 +286,7 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-# Plot horizontal bar chart with colors and embedded text
+            # Plot horizontal bar chart with colors and embedded text
             def plot_concrete_volume(volume_data):
                 fig, ax = plt.subplots()
                 bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
