@@ -82,11 +82,6 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.title('Foundation Comparison')
     return fig
 
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import streamlit as st
-
 def create_cylinder(radius, height, z_offset, num_sides=50):
     theta = np.linspace(0, 2 * np.pi, num_sides)
     x = radius * np.cos(theta)
@@ -94,45 +89,65 @@ def create_cylinder(radius, height, z_offset, num_sides=50):
     z = np.full_like(x, z_offset)
     return np.vstack((x, y, z)).T
 
+def plot_cylinder(ax, radius_top, radius_bottom, height, z_offset, color):
+    num_sides = 50
+    theta = np.linspace(0, 2 * np.pi, num_sides)
+    
+    x_top = radius_top * np.cos(theta)
+    y_top = radius_top * np.sin(theta)
+    z_top = np.full_like(x_top, z_offset + height)
+    
+    x_bottom = radius_bottom * np.cos(theta)
+    y_bottom = radius_bottom * np.sin(theta)
+    z_bottom = np.full_like(x_bottom, z_offset)
+    
+    # Top and bottom circles
+    verts_top = [list(zip(x_top, y_top, z_top))]
+    verts_bottom = [list(zip(x_bottom, y_bottom, z_bottom))]
+    
+    # Side surfaces
+    verts_side = []
+    for i in range(num_sides):
+        verts_side.append([(x_bottom[i], y_bottom[i], z_bottom[i]),
+                           (x_bottom[(i+1) % num_sides], y_bottom[(i+1) % num_sides], z_bottom[(i+1) % num_sides]),
+                           (x_top[(i+1) % num_sides], y_top[(i+1) % num_sides], z_top[(i+1) % num_sides]),
+                           (x_top[i], y_top[i], z_top[i])])
+    
+    # Plot the surfaces
+    ax.add_collection3d(Poly3DCollection(verts_top, facecolors=color, edgecolors='black', alpha=0.5))
+    ax.add_collection3d(Poly3DCollection(verts_bottom, facecolors=color, edgecolors='black', alpha=0.5))
+    ax.add_collection3d(Poly3DCollection(verts_side, facecolors=color, edgecolors='black', alpha=0.5))
+
 def plot_foundation_3d(params, title):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     
-    def plot_cylinder(ax, radius_top, radius_bottom, height, z_offset, color):
-        top_circle = create_cylinder(radius_top, height, z_offset)
-        bottom_circle = create_cylinder(radius_bottom, height, z_offset + height)
-        
-        ax.plot(top_circle[:, 0], top_circle[:, 1], top_circle[:, 2], color=color)
-        ax.plot(bottom_circle[:, 0], bottom_circle[:, 1], bottom_circle[:, 2], color=color)
-        
-        for i in range(len(top_circle)):
-            ax.plot([top_circle[i, 0], bottom_circle[i, 0]],
-                    [top_circle[i, 1], bottom_circle[i, 1]],
-                    [top_circle[i, 2], bottom_circle[i, 2]],
-                    color=color)
-    
-    # Plot each section of the foundation
-    plot_cylinder(ax, d1/2, d1/2, h1, 0, 'r')          # Slab
-    plot_cylinder(ax, d1/2, d2/2, h2, h1, 'g')         # Haunch
-    plot_cylinder(ax, d2/2, d2/2, h3, h1+h2, 'b')      # Plinth
-    plot_cylinder(ax, b1/2, b2/2, h5, -h5, 'y')        # Downstand (note the negative height)
+    plot_cylinder(ax, d1/2, d1/2, h1, 0, 'grey')          # Slab
+    plot_cylinder(ax, d1/2, d2/2, h2, h1, 'grey')         # Haunch
+    plot_cylinder(ax, d2/2, d2/2, h3, h1+h2, 'grey')      # Plinth
+    plot_cylinder(ax, b1/2, b2/2, h5, -h5, 'grey')        # Downstand (note the negative height)
 
     ax.set_xlabel('Width (m)')
     ax.set_ylabel('Length (m)')
     ax.set_zlabel('Height (m)')
     ax.set_title(title)
-    ax.set_xlim([-d1/2, d1/2])
-    ax.set_ylim([-d1/2, d1/2])
-    ax.set_zlim([0, h1 + h2 + h3])
     
+    # Set equal scaling
+    max_range = np.array([d1/2, d1/2, h1 + h2 + h3]).max()
+    ax.set_xlim([-max_range, max_range])
+    ax.set_ylim([-max_range, max_range])
+    ax.set_zlim([0, max_range])
+    ax.set_box_aspect([1,1,1])  # Aspect ratio is 1:1:1
+
     plt.show()
     return fig
 
 # Test the function
 params = [21.6, 6.0, 0.5, 1.4, 0.795, 0.1, 0.25, 6.0, 5.5]
 plot_foundation_3d(params, 'Optimized Foundation Geometry')
+
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
