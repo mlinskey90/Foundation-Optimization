@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
-# Define the necessary functions
+# Function definitions
 def calculate_foundation_weight(params, rho_conc):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
@@ -13,7 +13,6 @@ def calculate_foundation_weight(params, rho_conc):
     C3 = (np.pi * d2**2 / 4) * h3
     C4 = (1/3) * np.pi * ((b1/2)**2 + (b1/2 * b2/2) + (b2/2)**2) * h5
     total_weight = (C1 + C2 + C3 + C4) * rho_conc
-
     return total_weight, C1, C2, C3, C4
 
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
@@ -89,8 +88,8 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
-            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
-            f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
+            f"{params[0]:.3f} m", f"{params[1]::.3f} m", f"{params[2]::.3f} m", f"{params[3]::.3f} m", f"{params[4]::.3f} m",
+            f"{params[5]::.3f} m", f"{params[6]::.3f} m", f"{params[7]::.3f} m", f"{params[8]::.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
             f"{F_z:.3f} kN", f"{net_load:.3f} kN"
@@ -98,7 +97,6 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
     }
 
     concrete_volume = (C1 + C2 + C3 + C4)
-
     return result, concrete_volume
 
 def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
