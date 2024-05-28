@@ -24,3 +24,12 @@ This repository contains a Streamlit app for optimizing foundation dimensions an
    ```bash
    git clone <repository-url>
    cd <repository-directory>
+2. **Create and Activate a Virtual Environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+3. **Install Dependencies**   
+```bash
+   pip install -r requirements.txt
+
+
