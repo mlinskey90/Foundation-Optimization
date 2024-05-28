@@ -211,7 +211,6 @@ def plot_3d_foundation(params):
         aspectmode='data'
     ))
 
-    fig.update_traces(contours_z=dict(show=True, usecolormap=True, highlightcolor="limegreen", project_z=True))
     fig.update_layout(title="Optimized Foundation Geometry")
 
     return fig
