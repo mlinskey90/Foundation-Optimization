@@ -185,10 +185,10 @@ def plot_3d_foundation(params):
         x2 = r2 * np.cos(theta)
         y2 = r2 * np.sin(theta)
         z = np.array([0, height])
-        Xc, Zc = np.meshgrid(np.linspace(0, height, 2), x1)
-        Yc, Zc = np.meshgrid(np.linspace(0, height, 2), y1)
-        Xc[-1, :] = x2
-        Yc[-1, :] = y2
+        Xc, Zc = np.meshgrid(theta, z)
+        Yc, Zc = np.meshgrid(theta, z)
+        Xc[1, :] = x2
+        Yc[1, :] = y2
         fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
 
     add_cylinder(fig, d1 / 2, h1, 0, 'gray')  # slab
