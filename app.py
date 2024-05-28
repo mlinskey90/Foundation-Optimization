@@ -124,10 +124,10 @@ def plot_foundation_3d(params, title):
     
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     
-    plot_cylinder(ax, d1/2, d1/2, h1, 0, 'grey')          # Slab
-    plot_cylinder(ax, d1/2, d2/2, h2, h1, 'grey')         # Haunch
-    plot_cylinder(ax, d2/2, d2/2, h3, h1+h2, 'grey')      # Plinth
-    plot_cylinder(ax, b1/2, b2/2, h5, -h5, 'grey')        # Downstand (note the negative height)
+    plot_cylinder(ax, d1/2, d1/2, 0, h1, 'grey')          # Slab
+    plot_cylinder(ax, d1/2, d2/2, h1, h2, 'grey')         # Haunch
+    plot_cylinder(ax, d2/2, d2/2, h1+h2, h3, 'grey')      # Plinth
+    plot_cylinder(ax, b1/2, b2/2, 0, -h5, 'grey')        # Downstand (note the negative height)
 
     ax.set_xlabel('Width (m)')
     ax.set_ylabel('Length (m)')
