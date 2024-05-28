@@ -17,6 +17,25 @@ This repository contains a Streamlit app for optimizing foundation dimensions an
 - Plotly
 - Matplotlib
 
+  # Usage
+  To run the Streamlit application, execute the following command:
+   ```bash
+   streamlit run app.py
+# Streamlit Interface
+Streamlit Interface
+The interface consists of several sections where users can input parameters and visualize the results:
+
+1. Load Cases: Input parameters for vertical force (F_z), resultant force (F_RES), moment (M_z), and resultant moment (M_RES).
+
+2. Material Properties: Specify the material properties including maximum pressure (q_max), concrete density (rho_conc), wet ballast density (rho_ballast_wet), and dry ballast density (rho_ballast_dry).
+
+3. Dimensions: Define the initial dimensions of the foundation components.
+
+4. Calculation and Optimization:
+
+   Run Calculations: Calculates the initial foundation parameters and displays the results.
+   Optimize Foundation: Optimizes the foundation dimensions to reduce concrete usage and visualizes the optimized        geometry.
+   
 ## Installation
 
 1. **Clone the Repository**
