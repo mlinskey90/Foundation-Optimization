@@ -4,8 +4,6 @@ import streamlit as st
 from scipy.optimize import minimize
 import pandas as pd
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-pip install plotly
-
 
 # Set the default font to Helvetica for matplotlib
 plt.rcParams['font.sans-serif'] = ['Helvetica']
