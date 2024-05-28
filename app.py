@@ -1,12 +1,9 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
-from scipy.optimize import minimize
+import numpy as np
 import pandas as pd
-
-# Set the default font to Helvetica for matplotlib
-plt.rcParams['font.sans-serif'] = ['Helvetica']
-plt.rcParams['font.family'] = 'sans-serif'
+import plotly.graph_objects as go
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
 # Define the necessary functions
 def calculate_foundation_weight(params, rho_conc):
@@ -137,7 +134,6 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             {'type': 'ineq', 'fun': constraint_theta},
             {'type': 'ineq', 'fun': constraint_h3},
             {'type': 'ineq', 'fun': constraint_anchor}]
-            
 
     try:
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
@@ -169,6 +165,50 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
     except Exception as e:
         return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
+
+def plot_3d_foundation(params):
+    d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
+
+    fig = go.Figure()
+
+    def add_cylinder(fig, radius, height, z_shift, color):
+        theta = np.linspace(0, 2 * np.pi, 100)
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
+        z = np.linspace(0, height, 2)
+        Xc, Zc = np.meshgrid(x, z)
+        Yc, Zc = np.meshgrid(y, z)
+        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+
+    def add_conical_frustum(fig, r1, r2, height, z_shift, color):
+        theta = np.linspace(0, 2 * np.pi, 100)
+        x1 = r1 * np.cos(theta)
+        y1 = r1 * np.sin(theta)
+        x2 = r2 * np.cos(theta)
+        y2 = r2 * np.sin(theta)
+        z = np.array([0, height])
+        Xc, Zc = np.meshgrid(np.linspace(0, height, 2), x1)
+        Yc, Zc = np.meshgrid(np.linspace(0, height, 2), y1)
+        Xc[-1, :] = x2
+        Yc[-1, :] = y2
+        fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+
+    add_cylinder(fig, d1 / 2, h1, 0, 'gray')  # slab
+    add_conical_frustum(fig, d1 / 2, d2 / 2, h2, h1, 'gray')  # haunch
+    add_cylinder(fig, d2 / 2, h3, h1 + h2, 'gray')  # plinth
+    add_conical_frustum(fig, b1 / 2, b2 / 2, h5, -h5, 'gray')  # downstand
+
+    fig.update_layout(scene=dict(
+        xaxis_title='Width (m)',
+        yaxis_title='Length (m)',
+        zaxis_title='Height (m)',
+        aspectmode='data'
+    ))
+
+    fig.update_traces(contours_z=dict(show=True, usecolormap=True, highlightcolor="limegreen", project_z=True))
+    fig.update_layout(title="Optimized Foundation Geometry")
+
+    return fig
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -228,6 +268,8 @@ if st.button("Optimize Foundation"):
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig is not None:
         st.pyplot(fig)
+        st.plotly_chart(plot_3d_foundation(initial_params))
+        st.plotly_chart(plot_3d_foundation([optimized_concrete_volume] * 9))
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
