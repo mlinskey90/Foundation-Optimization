@@ -93,7 +93,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
-            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
+            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]::.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
@@ -188,26 +188,27 @@ def plot_cylinder(fig, radius_top, radius_bottom, height, z_offset, color):
     x_top, y_top, z_top, x_bottom, y_bottom, z_bottom = create_cylinder(radius_top, radius_bottom, height, z_offset)
     
     # Define faces
-    fig.add_trace(go.Mesh3d(x=x_top, y=y_top, z=z_top, color=color, opacity=0.5, alphahull=0))
-    fig.add_trace(go.Mesh3d(x=x_bottom, y=y_bottom, z=z_bottom, color=color, opacity=0.5, alphahull=0))
-    
-    num_sides = len(x_top)
-    for i in range(num_sides):
-        fig.add_trace(go.Mesh3d(
-            x=[x_bottom[i], x_bottom[(i+1) % num_sides], x_top[(i+1) % num_sides], x_top[i]],
-            y=[y_bottom[i], y_bottom[(i+1) % num_sides], y_top[(i+1) % num_sides], y_top[i]],
-            z=[z_bottom[i], z_bottom[(i+1) % num_sides], z_top[(i+1) % num_sides], z_top[i]],
-            color=color, opacity=0.5, alphahull=0))
+    fig.add_trace(go.Mesh3d(x=np.concatenate([x_top, x_bottom]),
+                            y=np.concatenate([y_top, y_bottom]),
+                            z=np.concatenate([z_top, z_bottom]),
+                            i=np.concatenate([np.arange(len(x_top) - 1), [len(x_top) - 1]]),
+                            j=np.concatenate([np.arange(1, len(x_top)), [0]]),
+                            k=np.concatenate([np.arange(1, len(x_top)), [0]] + len(x_top)),
+                            color=color, opacity=0.5))
 
 def plot_foundation_3d(params, title):
     fig = go.Figure()
     
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     
-    plot_cylinder(fig, d1/2, d1/2, h1, 0, 'grey')          # Slab
-    plot_cylinder(fig, d1/2, d2/2, h2, h1, 'grey')         # Haunch
-    plot_cylinder(fig, d2/2, d2/2, h3, h1+h2, 'grey')      # Plinth
-    plot_cylinder(fig, b1/2, b2/2, h5, -h5, 'grey')        # Downstand (note the negative height)
+    # Slab
+    plot_cylinder(fig, d1/2, d1/2, h1, 0, 'grey')
+    # Haunch
+    plot_cylinder(fig, d1/2, d2/2, h2, h1, 'grey')
+    # Plinth
+    plot_cylinder(fig, d2/2, d2/2, h3, h1+h2, 'grey')
+    # Downstand (conical frustum, upside down)
+    plot_cylinder(fig, b1/2, b2/2, h5, -h5, 'grey')
 
     fig.update_layout(
         scene=dict(
