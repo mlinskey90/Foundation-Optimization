@@ -195,14 +195,14 @@ def plot_3d_foundation(params):
                 y=np.concatenate([Y1[i], Y1[i+1], Y2[i+1], Y2[i]]),
                 z=np.concatenate([Z1[i], Z1[i+1], Z2[i+1], Z2[i]]) + z_shift,
                 color=color,
-                opacity=0.6,
+                opacity=1.0,
                 flatshading=True
             ))
 
     add_cylinder(fig, d1 / 2, h1, 0, 'gray')  # slab
     add_conical_frustum(fig, d1 / 2, d2 / 2, h2, h1, 'gray')  # haunch
     add_cylinder(fig, d2 / 2, h3, h1 + h2, 'gray')  # plinth
-    add_conical_frustum(fig, b1 / 2, b2 / 2, h5, -h5, 'gray')  # downstand
+    add_conical_frustum(fig, b1 / 2, b2 / 2, 0, -h5, 'gray')  # downstand
 
     fig.update_layout(scene=dict(
         xaxis_title='Width (m)',
