@@ -84,7 +84,9 @@ def plot_foundation_comparison(original_params, optimized_params):
         title='Foundation Comparison',
         legend=dict(x=0.02, y=0.98),
         autosize=True,
-        template='plotly_white'
+        template='plotly_white',
+        plot_bgcolor='white',  # Set background color to white
+        paper_bgcolor='white'  # Set paper color to white
     )
 
     return fig
@@ -286,7 +288,6 @@ if st.button("Optimize Foundation"):
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig is not None:
-        st.plotly_chart(plot_3d_foundation(initial_params))
         st.plotly_chart(fig)  # Using plotly_chart to display Plotly figure
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
@@ -315,3 +316,6 @@ if st.button("Optimize Foundation"):
             # Plot and display in Streamlit
             fig = plot_concrete_volume(volume_data)
             st.pyplot(fig)
+
+        # Plot the 3D foundation geometry
+        st.plotly_chart(plot_3d_foundation(initial_params))
