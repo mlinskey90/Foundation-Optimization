@@ -40,9 +40,9 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
 def plot_foundation_comparison(original_params, optimized_params):
-    fig = go.Figure()
+    fig, ax = plt.subplots(figsize=(20, 15))
 
-    def plot_foundation(params, edgecolor, fillcolor, name):
+    def plot_foundation(params, edgecolor, fillcolor, label):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
         plinth_x = [-d2/2, d2/2, d2/2, -d2/2, -d2/2]
@@ -57,39 +57,23 @@ def plot_foundation_comparison(original_params, optimized_params):
         downstand_x = [-b1/2, -b2/2, b2/2, b1/2, -b1/2]
         downstand_y = [0, -h5, -h5, 0, 0]
 
-        fig.add_trace(go.Scatter(x=plinth_x, y=plinth_y, mode='lines', line=dict(color=edgecolor)))
-        fig.add_trace(go.Scatter(x=haunch_x, y=haunch_y, mode='lines', line=dict(color=edgecolor)))
-        fig.add_trace(go.Scatter(x=slab_x, y=slab_y, mode='lines', line=dict(color=edgecolor)))
-        fig.add_trace(go.Scatter(x=downstand_x, y=downstand_y, mode='lines', line=dict(color=edgecolor)))
-        fig.add_trace(go.Scatter(x=plinth_x, y=plinth_y, fill='toself', mode='none', fillcolor=fillcolor, opacity=0.5, showlegend=False))
-        fig.add_trace(go.Scatter(x=haunch_x, y=haunch_y, fill='toself', mode='none', fillcolor=fillcolor, opacity=0.5, showlegend=False))
-        fig.add_trace(go.Scatter(x=slab_x, y=slab_y, fill='toself', mode='none', fillcolor=fillcolor, opacity=0.5, showlegend=False))
-        fig.add_trace(go.Scatter(x=downstand_x, y=downstand_y, fill='toself', mode='none', fillcolor=fillcolor, opacity=0.5, showlegend=False))
+        ax.plot(plinth_x, plinth_y, color=edgecolor)
+        ax.plot(haunch_x, haunch_y, color=edgecolor)
+        ax.plot(slab_x, slab_y, color=edgecolor)
+        ax.plot(downstand_x, downstand_y, color=edgecolor)
 
-    plot_foundation(original_params, 'black', 'rgba(128, 128, 128, 0.5)', 'Original')
-    plot_foundation(optimized_params, 'green', 'rgba(144, 238, 144, 0.5)', 'Optimized')
+        ax.fill(plinth_x, plinth_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor, label=label)
+        ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
+        ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
+        ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
 
-    fig.update_layout(
-        title=dict(text="Foundation Comparison", font=dict(color='black')),
-        xaxis=dict(
-            title=dict(text="Width (m)", font=dict(color='black')),
-            tickfont=dict(color='black'),
-            range=[-15, 15]
-        ),
-        yaxis=dict(
-            title=dict(text="Height (m)", font=dict(color='black')),
-            tickfont=dict(color='black'),
-            scaleanchor="x",
-            scaleratio=1,
-            range=[-1, 4]
-        ),
-        template="plotly_white",
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        font=dict(color='black'),
-        showlegend=False  # Remove the legend
-    )
+    plot_foundation(original_params, 'black', 'grey', 'Original')
+    plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
 
+    ax.set_aspect('equal')
+    plt.xlabel('Width (m)')
+    plt.ylabel('Height (m)')
+@@ -70,54 +82,91 @@ def plot_foundation(params, edgecolor, fillcolor, label):
     return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
