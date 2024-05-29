@@ -64,7 +64,7 @@ def plot_foundation_comparison(original_params, optimized_params):
         fig.add_trace(go.Scatter(x=slab_x, y=slab_y, mode='lines', line=dict(color=linecolor)))
         fig.add_trace(go.Scatter(x=downstand_x, y=downstand_y, mode='lines', line=dict(color=linecolor)))
 
-        fig.add_trace(go.Scatter(x=plinth_x, y=plinth_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), name=name))
+        fig.add_trace(go.Scatter(x=plinth_x, y=plinth_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
         fig.add_trace(go.Scatter(x=haunch_x, y=haunch_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
         fig.add_trace(go.Scatter(x=slab_x, y=slab_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
         fig.add_trace(go.Scatter(x=downstand_x, y=downstand_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
@@ -79,14 +79,16 @@ def plot_foundation_comparison(original_params, optimized_params):
     min_height = min(-original_params[8], -optimized_params[8])
 
     fig.update_layout(
-        xaxis=dict(range=[-max_width * 1.5, max_width * 1.5], title='Width (m)'),
-        yaxis=dict(range=[min_height * 1.5, max_height * 1.5], title='Height (m)'),
-        title='Foundation Comparison',
-        legend=dict(x=0.02, y=0.98),
+        xaxis=dict(range=[-max_width * 1.5, max_width * 1.5], showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(range=[min_height * 1.5, max_height * 1.5], showgrid=False, zeroline=False, visible=False),
+        title=None,
+        showlegend=False,
         autosize=True,
+        margin=dict(l=0, r=0, t=0, b=0),
         template='plotly_white',
         plot_bgcolor='white',  # Set background color to white
-        paper_bgcolor='white'  # Set paper color to white
+        paper_bgcolor='white',  # Set paper color to white
+        font=dict(color='black')  # Force text color to black
     )
 
     return fig
