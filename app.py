@@ -79,8 +79,8 @@ def plot_foundation_comparison(original_params, optimized_params):
     min_height = min(-original_params[8], -optimized_params[8])
 
     fig.update_layout(
-        xaxis=dict(range=[-max_width * 1.5, max_width * 1.5], showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(range=[min_height * 1.5, max_height * 1.5], showgrid=False, zeroline=False, visible=False),
+        xaxis=dict(range=[-max_width * 1.2, max_width * 1.2], showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(range=[min_height * 1.2, max_height * 1.2], showgrid=False, zeroline=False, visible=False),
         title=None,
         showlegend=False,
         autosize=True,
