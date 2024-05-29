@@ -40,7 +40,7 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
 def plot_foundation_comparison(original_params, optimized_params):
-    fig, ax = plt.subplots(figsize=(20, 15))
+    fig, ax = plt.subplots(figsize=(10, 6))  # Adjusted size for a more sleek look
 
     def plot_foundation(params, edgecolor, fillcolor, label):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
@@ -70,10 +70,22 @@ def plot_foundation_comparison(original_params, optimized_params):
     plot_foundation(original_params, 'black', 'grey', 'Original')
     plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
 
+    # Calculate axis limits based on foundation dimensions
+    max_width = max(original_params[0], optimized_params[0]) / 2
+    max_height = max(original_params[1] + original_params[2] + original_params[3],
+                     optimized_params[1] + optimized_params[2] + optimized_params[3])
+    min_height = min(-original_params[8], -optimized_params[8])
+
+    ax.set_xlim(-max_width * 1.5, max_width * 1.5)
+    ax.set_ylim(min_height * 1.5, max_height * 1.5)
+
     ax.set_aspect('equal')
-    plt.xlabel('Width (m)')
-    plt.ylabel('Height (m)')
-@@ -70,54 +82,91 @@ def plot_foundation(params, edgecolor, fillcolor, label):
+    ax.set_xlabel('Width (m)')
+    ax.set_ylabel('Height (m)')
+    ax.set_title('Foundation Comparison')
+    ax.legend()
+    ax.axis('off')  # Remove axis for a more minimalist look
+
     return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
