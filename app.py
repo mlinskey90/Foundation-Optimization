@@ -39,7 +39,7 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
-def plot_foundation_comparison(original_params, optimized_params):
+def plot_foundation_comparison(original_params, optimized_params, chart_height=300, chart_width=800):
     fig = go.Figure()
 
     def plot_foundation(params, linecolor, fillcolor, name):
@@ -78,11 +78,12 @@ def plot_foundation_comparison(original_params, optimized_params):
 
     fig.update_layout(
         xaxis=dict(range=[-max_width * 1.2, max_width * 1.2], showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(range=[min_height * 1, max_height * 1], showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(range=[min_height * 1.2, max_height * 1.2], showgrid=False, zeroline=False, visible=False),
         title=None,
         showlegend=False,
         autosize=True,
-        height=200,  # Reduce the height of the entire chart
+        height=200
+        width=700
         margin=dict(l=0, r=0, t=0, b=0),
         template='plotly_white',
         plot_bgcolor='white',  # Set background color to white
@@ -92,6 +93,12 @@ def plot_foundation_comparison(original_params, optimized_params):
 
     return fig
 
+# Example usage with some parameters and chart size
+original_params = [10, 8, 2, 1, 1, 1, 1, 6, 5]
+optimized_params = [9, 7, 1.5, 1, 1, 1, 1, 5, 4]
+
+fig = plot_foundation_comparison(original_params, optimized_params, chart_height=300, chart_width=800)
+fig.show()
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
