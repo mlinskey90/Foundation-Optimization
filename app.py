@@ -87,14 +87,7 @@ def plot_foundation_comparison(original_params, optimized_params):
         template='plotly_white'
     )
 
-    fig.show()
-
-# Example usage with some parameters
-original_params = [10, 8, 2, 1, 1, 1, 1, 6, 5]
-optimized_params = [9, 7, 1.5, 1, 1, 1, 1, 5, 4]
-
-plot_foundation_comparison(original_params, optimized_params)
-
+    return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
