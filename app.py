@@ -82,7 +82,7 @@ def plot_foundation_comparison(original_params, optimized_params):
         title=None,
         showlegend=False,
         autosize=True,
-        height=300,  # Reduce the height of the entire chart
+        height=200,  # Reduce the height of the entire chart
         margin=dict(l=0, r=0, t=0, b=0),
         template='plotly_white',
         plot_bgcolor='white',  # Set background color to white
