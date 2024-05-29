@@ -80,7 +80,7 @@ def plot_foundation_comparison(original_params, optimized_params):
 
     fig.update_layout(
         xaxis=dict(range=[-max_width * 1.2, max_width * 1.2], showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(range=[min_height * 0.7, max_height * 0.7], showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(range=[min_height * 0.2, max_height * 0.2], showgrid=False, zeroline=False, visible=False),
         title=None,
         showlegend=False,
         autosize=True,
