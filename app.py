@@ -39,10 +39,12 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
-def plot_foundation_comparison(original_params, optimized_params):
-    fig, ax = plt.subplots(figsize=(10, 6))  # Adjusted size for a more sleek look
+import plotly.graph_objects as go
 
-    def plot_foundation(params, edgecolor, fillcolor, label):
+def plot_foundation_comparison(original_params, optimized_params):
+    fig = go.Figure()
+
+    def plot_foundation(params, linecolor, fillcolor, name):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
         plinth_x = [-d2/2, d2/2, d2/2, -d2/2, -d2/2]
@@ -57,18 +59,18 @@ def plot_foundation_comparison(original_params, optimized_params):
         downstand_x = [-b1/2, -b2/2, b2/2, b1/2, -b1/2]
         downstand_y = [0, -h5, -h5, 0, 0]
 
-        ax.plot(plinth_x, plinth_y, color=edgecolor)
-        ax.plot(haunch_x, haunch_y, color=edgecolor)
-        ax.plot(slab_x, slab_y, color=edgecolor)
-        ax.plot(downstand_x, downstand_y, color=edgecolor)
+        fig.add_trace(go.Scatter(x=plinth_x, y=plinth_y, mode='lines', line=dict(color=linecolor)))
+        fig.add_trace(go.Scatter(x=haunch_x, y=haunch_y, mode='lines', line=dict(color=linecolor)))
+        fig.add_trace(go.Scatter(x=slab_x, y=slab_y, mode='lines', line=dict(color=linecolor)))
+        fig.add_trace(go.Scatter(x=downstand_x, y=downstand_y, mode='lines', line=dict(color=linecolor)))
 
-        ax.fill(plinth_x, plinth_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor, label=label)
-        ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
-        ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
-        ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
+        fig.add_trace(go.Scatter(x=plinth_x, y=plinth_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), name=name))
+        fig.add_trace(go.Scatter(x=haunch_x, y=haunch_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
+        fig.add_trace(go.Scatter(x=slab_x, y=slab_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
+        fig.add_trace(go.Scatter(x=downstand_x, y=downstand_y, fill='toself', mode='lines', fillcolor=fillcolor, line=dict(color=linecolor), showlegend=False))
 
-    plot_foundation(original_params, 'black', 'grey', 'Original')
-    plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
+    plot_foundation(original_params, 'black', 'rgba(128, 128, 128, 0.5)', 'Original')
+    plot_foundation(optimized_params, 'green', 'rgba(144, 238, 144, 0.5)', 'Optimized')
 
     # Calculate axis limits based on foundation dimensions
     max_width = max(original_params[0], optimized_params[0]) / 2
@@ -76,17 +78,23 @@ def plot_foundation_comparison(original_params, optimized_params):
                      optimized_params[1] + optimized_params[2] + optimized_params[3])
     min_height = min(-original_params[8], -optimized_params[8])
 
-    ax.set_xlim(-max_width * 1.5, max_width * 1.5)
-    ax.set_ylim(min_height * 1.5, max_height * 1.5)
+    fig.update_layout(
+        xaxis=dict(range=[-max_width * 1.5, max_width * 1.5], title='Width (m)'),
+        yaxis=dict(range=[min_height * 1.5, max_height * 1.5], title='Height (m)'),
+        title='Foundation Comparison',
+        legend=dict(x=0.02, y=0.98),
+        autosize=True,
+        template='plotly_white'
+    )
 
-    ax.set_aspect('equal')
-    ax.set_xlabel('Width (m)')
-    ax.set_ylabel('Height (m)')
-    ax.set_title('Foundation Comparison')
-    ax.legend()
-    ax.axis('off')  # Remove axis for a more minimalist look
+    fig.show()
 
-    return fig
+# Example usage with some parameters
+original_params = [10, 8, 2, 1, 1, 1, 1, 6, 5]
+optimized_params = [9, 7, 1.5, 1, 1, 1, 1, 5, 4]
+
+plot_foundation_comparison(original_params, optimized_params)
+
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
