@@ -220,8 +220,8 @@ def plot_3d_foundation(params):
 # Streamlit Interface
 st.title("Foundation Optimization")
 
-# Load and display the image above the "Run Calculations" button
-image_path = "foundation.PNG"
+# Load and display the uploaded image
+image_path = "/mnt/data/image.png"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
 # Sidebar Inputs
@@ -298,6 +298,9 @@ if st.button("Optimize Foundation"):
 
         fig_volume = plot_concrete_volume(volume_data)
         st.pyplot(fig_volume)
+        
+    st.pyplot(fig)
+    st.plotly_chart(plot_3d_foundation(initial_params))
         
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params))
