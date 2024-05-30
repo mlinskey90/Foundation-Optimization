@@ -309,6 +309,3 @@ if st.button("Optimize Foundation"):
 
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
-
-    st.pyplot(fig)
-    st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
