@@ -129,13 +129,6 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.title('Foundation Comparison', color='black')
     return fig
 
-# Example usage with some parameters and chart size
-original_params = [10, 8, 2, 1, 1, 1, 1, 6, 5]
-optimized_params = [9, 7, 1.5, 1, 1, 1, 1, 5, 4]
-
-fig = plot_foundation_comparison(original_params, optimized_params)
-st.pyplot(fig, use_container_width=True)
-
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
@@ -329,29 +322,28 @@ if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
-    if fig is not None:
-        st.plotly_chart(fig)
-        st.subheader("Concrete Volume Comparison")
-        if st.session_state['original_concrete_volume'] is not None:
-            st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
-        st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
-        if st.session_state['original_concrete_volume'] is not None:
-            volume_data = pd.DataFrame({
-                'Volume': ['Original', 'Optimized'],
-                'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
-            })
+    st.subheader("Concrete Volume Comparison")
+    if st.session_state['original_concrete_volume'] is not None:
+        st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
+    st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
+    if st.session_state['original_concrete_volume'] is not None:
+        volume_data = pd.DataFrame({
+            'Volume': ['Original', 'Optimized'],
+            'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
+        })
 
-            def plot_concrete_volume(volume_data):
-                fig, ax = plt.subplots()
-                bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-                for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
-                    width = bar.get_width()
-                    ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
-                plt.xlabel('Concrete Volume (m³)')
-                plt.title('Concrete Volume Comparison')
-                return fig
+        def plot_concrete_volume(volume_data):
+            fig, ax = plt.subplots()
+            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+            for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
+                width = bar.get_width()
+                ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
+            plt.xlabel('Concrete Volume (m³)')
+            plt.title('Concrete Volume Comparison')
+            return fig
 
-            fig = plot_concrete_volume(volume_data)
-            st.pyplot(fig)
-
-        st.plotly_chart(plot_3d_foundation(initial_params))
+        fig_volume = plot_concrete_volume(volume_data)
+        st.pyplot(fig_volume)
+        
+    st.pyplot(fig)
+    st.plotly_chart(plot_3d_foundation(initial_params))
