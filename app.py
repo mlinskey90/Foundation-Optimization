@@ -263,27 +263,27 @@ if st.button("Run Calculations"):
 
     # Filter out the unwanted parameters
     keys_to_remove = ["C1", "C2", "C3", "C4", "Total weight", "B_wet", "W", "F_z", "net_load"]
-    filtered_result_output = {k: v for k, v in result_output.items() if k not in keys_to_remove}
+    filtered_result_output = {k: v for k, v in zip(result_output["Parameter"], result_output["Value"]) if k not in keys_to_remove}
 
-    result_df = pd.DataFrame(filtered_result_output)
-    result_html = result_df.to_html(index=False)
+    filtered_result_df = pd.DataFrame(filtered_result_output.items(), columns=["Parameter", "Value"])
+    result_html = filtered_result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
     st.subheader("Concrete Volume")
     st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
 
+st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
 
     original_values = [f"{val:.3f} m" for val in initial_params]
     
     # Filter out the unwanted parameters
-    filtered_result_output = {k: v for k, v in result_output.items() if k not in keys_to_remove}
+    filtered_result_output = {k: v for k, v in zip(result_output["Parameter"], result_output["Value"]) if k not in keys_to_remove}
 
-    result_df = pd.DataFrame(filtered_result_output)
-    result_df.columns = ["Parameter", "Optimized Value"]
-    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
+    filtered_result_df = pd.DataFrame(filtered_result_output.items(), columns=["Parameter", "Optimized Value"])
+    filtered_result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(filtered_result_df) - len(original_values)))
 
-    result_html = result_df.to_html(index=False)
+    result_html = filtered_result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
 
     st.subheader("Concrete Volume Comparison")
@@ -297,7 +297,6 @@ if st.button("Optimize Foundation"):
         })
         fig_volume = plot_concrete_volume(volume_data)
         st.pyplot(fig_volume)
-        
+
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
-
