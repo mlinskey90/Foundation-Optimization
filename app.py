@@ -261,25 +261,22 @@ if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
     result_df = pd.DataFrame(result_output)
-    st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
+    result_html = result_df.to_html(index=False)
+    st.markdown(result_html, unsafe_allow_html=True)
     st.subheader("Concrete Volume")
     st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
 
-st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
 
-    # Map original values to original_params for display
     original_values = [f"{val:.3f} m" for val in initial_params]
-
     result_df = pd.DataFrame(result_output)
-
-    # Rename columns and add the optimized values
     result_df.columns = ["Parameter", "Optimized Value"]
     result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
 
-    st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
-    
+    result_html = result_df.to_html(index=False)
+    st.markdown(result_html, unsafe_allow_html=True)
+
     st.subheader("Concrete Volume Comparison")
     if st.session_state['original_concrete_volume'] is not None:
         st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -289,19 +286,9 @@ if st.button("Optimize Foundation"):
             'Volume': ['Original', 'Optimized'],
             'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
         })
-
-        def plot_concrete_volume(volume_data):
-            fig, ax = plt.subplots()
-            bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-            for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
-                width = bar.get_width()
-                ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
-            plt.xlabel('Concrete Volume (m³)')
-            plt.title('Concrete Volume Comparison')
-            return fig
-
         fig_volume = plot_concrete_volume(volume_data)
         st.pyplot(fig_volume)
         
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
+
