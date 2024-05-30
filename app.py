@@ -256,56 +256,70 @@ initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 if 'original_concrete_volume' not in st.session_state:
     st.session_state['original_concrete_volume'] = None
 
-def filter_result_output(result_output, keys_to_remove):
-    filtered_result_output = {"Parameter": [], "Value": []}
-    for param, value in zip(result_output["Parameter"], result_output["Value"]):
-        if param not in keys_to_remove:
-            filtered_result_output["Parameter"].append(param)
-            filtered_result_output["Value"].append(value)
-    return filtered_result_output
+def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
+    total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
+    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
 
-st.header("Run Calculations")
-if st.button("Run Calculations"):
-    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
-    st.session_state['original_concrete_volume'] = original_concrete_volume
+    result = {
+        "Parameter": [
+            "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2"
+        ],
+        "Value": [
+            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
+            f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m"
+        ]
+    }
 
-    # Filter out the unwanted parameters
-    keys_to_remove = ["C1", "C2", "C3", "C4", "Total weight", "B_wet", "W", "F_z", "net_load"]
-    filtered_result_output = filter_result_output(result_output, keys_to_remove)
+    concrete_volume = (C1 + C2 + C3 + C4)
+    return result, concrete_volume
 
-    filtered_result_df = pd.DataFrame(filtered_result_output)
-    result_html = filtered_result_df.to_html(index=False)
-    st.markdown(result_html, unsafe_allow_html=True)
-    st.subheader("Concrete Volume")
-    st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
+def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
+    bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
 
-st.header("Optimize Foundation")
-if st.button("Optimize Foundation"):
-    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+    def objective(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        _, _, _, _, _, total_weight = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+        return total_weight
 
-    original_values = [f"{val:.3f} m" for val in initial_params]
-    
-    # Filter out the unwanted parameters
-    filtered_result_output = filter_result_output(result_output, keys_to_remove)
+    def constraint_pmin(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+        return p_min - 0
 
-    filtered_result_df = pd.DataFrame(filtered_result_output)
-    filtered_result_df.columns = ["Parameter", "Optimized Value"]
-    filtered_result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(filtered_result_df) - len(original_values)))
+    def constraint_theta(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        d1, d2, h2 = params[0], params[1], params[3]
+        theta = np.degrees(np.arctan(h2 / ((d1 - d2) / 2)))
+        return 13 - theta
 
-    result_html = filtered_result_df.to_html(index=False)
-    st.markdown(result_html, unsafe_allow_html=True)
+    def constraint_h3(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        h3, h1, h2 = params[4], params[2], params[3]
+        return (h1 + h2) - h3
 
-    st.subheader("Concrete Volume Comparison")
-    if st.session_state['original_concrete_volume'] is not None:
-        st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
-    st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
-    if st.session_state['original_concrete_volume'] is not None:
-        volume_data = pd.DataFrame({
-            'Volume': ['Original', 'Optimized'],
-            'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
-        })
-        fig_volume = plot_concrete_volume(volume_data)
-        st.pyplot(fig_volume)
+    def constraint_anchor(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
+        return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
 
-    st.pyplot(fig)
-    st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
+    cons = [{'type': 'ineq', 'fun': constraint_pmin},
+            {'type': 'ineq', 'fun': constraint_theta},
+            {'type': 'ineq', 'fun': constraint_h3},
+            {'type': 'ineq', 'fun': constraint_anchor}]
+
+    try:
+        result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
+                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
+
+        if result.success:
+            optimized_params = result.x
+            params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+            total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
+            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
+
+            result_output = {
+                "Parameter": [
+                    "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2"
+                ],
+                "Value": [
+                    f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f}
