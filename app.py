@@ -228,6 +228,18 @@ def plot_concrete_volume(volume_data):
     plt.title('Concrete Volume Comparison')
     return fig
 
+# Function to plot steel and ballast weights
+def plot_steel_and_ballast(data):
+    fig, ax = plt.subplots()
+    bars = ax.bar(data['Category'], data['Weight (t)'], color=['blue', 'blue', 'orange', 'orange'])
+    for bar, label in zip(bars, [f"{v:.3f} t" for v in data['Weight (t)']]):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, height / 2, label, ha='center', va='center', color='black')
+    plt.xlabel('Category')
+    plt.ylabel('Weight (t)')
+    plt.title('Steel and Ballast Weight Comparison')
+    return fig
+
 # Function definitions with docstrings remain unchanged...
 
 # Streamlit Interface
@@ -386,3 +398,17 @@ if st.button("Optimize Foundation"):
 
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
+
+    # Additional Calculations for Steel and Ballast
+    original_steel = 0.135 * st.session_state['original_concrete_volume']
+    optimized_steel = 0.135 * (1 + ((st.session_state['original_concrete_volume'] - optimized_concrete_volume) / st.session_state['original_concrete_volume'])) * optimized_concrete_volume
+    original_ballast = rho_ballast_dry / 10
+    optimized_ballast = rho_ballast_dry / 10
+
+    weight_data = pd.DataFrame({
+        'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
+        'Weight (t)': [original_steel, optimized_steel, original_ballast, optimized_ballast]
+    })
+
+    fig_weight = plot_steel_and_ballast(weight_data)
+    st.pyplot(fig_weight)
