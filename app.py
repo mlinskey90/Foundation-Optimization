@@ -221,7 +221,7 @@ def plot_3d_foundation(params):
 st.title("Foundation Optimization")
 
 # Load and display the image above the "Run Calculations" button
-image_path = "foundation.PNG"
+image_path = "/mnt/data/image.png"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
 # Sidebar Inputs
@@ -261,7 +261,10 @@ if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
     result_df = pd.DataFrame(result_output)
-    st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
+    st.dataframe(result_df.style.hide(axis="index").set_table_styles([
+        dict(selector='th', props=[('max-width', '200px'), ('white-space', 'nowrap')]), 
+        dict(selector='td', props=[('max-width', '200px'), ('white-space', 'nowrap')])
+    ]), use_container_width=True)
     st.subheader("Concrete Volume")
     st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
 
@@ -274,7 +277,10 @@ if st.button("Optimize Foundation"):
     result_df.columns = ["Parameter", "Original Value"]
     result_df["Optimized Value"] = [value if value != 'nan m' else 'N/A' for value in result_output["Value"]]
 
-    st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
+    st.dataframe(result_df.style.hide(axis="index").set_table_styles([
+        dict(selector='th', props=[('max-width', '200px'), ('white-space', 'nowrap')]), 
+        dict(selector='td', props=[('max-width', '200px'), ('white-space', 'nowrap')])
+    ]), use_container_width=True)
     
     st.subheader("Concrete Volume Comparison")
     if st.session_state['original_concrete_volume'] is not None:
