@@ -401,7 +401,7 @@ if st.button("Optimize Foundation"):
 
     # Additional Calculations for Steel and Ballast
     original_steel = 0.135 * st.session_state['original_concrete_volume']
-    optimized_steel = 0.135 * (1 + ((st.session_state['original_concrete_volume'] - optimized_concrete_volume) / st.session_state['original_concrete_volume'])) * optimized_concrete_volume
+    optimized_steel = 0.15 * optimized_concrete_volume
     original_ballast = rho_ballast_dry / 10
     optimized_ballast = rho_ballast_dry / 10
 
