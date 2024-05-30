@@ -7,6 +7,16 @@ import matplotlib.pyplot as plt
 
 # Function definitions with docstrings
 def calculate_foundation_weight(params, rho_conc):
+    """
+    Calculate the weight of the foundation.
+
+    Args:
+        params (list): List of foundation dimensions.
+        rho_conc (float): Density of concrete.
+
+    Returns:
+        tuple: Total weight and individual component volumes.
+    """
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
     C2 = (1/3) * np.pi * ((d1/2)**2 + (d1/2 * d2/2) + (d2/2)**2) * h2
@@ -16,6 +26,17 @@ def calculate_foundation_weight(params, rho_conc):
     return total_weight, C1, C2, C3, C4
 
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
+    """
+    Calculate the ballast and buoyancy forces.
+
+    Args:
+        params (list): List of foundation dimensions.
+        C2, C4 (float): Volumes of conical frustums.
+        rho_ballast_wet, rho_water, rho_conc (float): Densities of ballast and water.
+
+    Returns:
+        tuple: Ballast weight and buoyancy force.
+    """
     d1, d2, h1, h2, h3, h4, h5 = params[:7]
     h_water = h1 + h2 + h3 - h4
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
@@ -23,12 +44,34 @@ def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, r
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
+    """
+    Calculate the net vertical load.
+
+    Args:
+        params (list): List of foundation dimensions.
+        F_z (float): Vertical force.
+        rho_conc, rho_ballast_wet, rho_water (float): Densities of concrete, ballast, and water.
+
+    Returns:
+        tuple: Net vertical load and individual component weights.
+    """
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
     return net_load, total_weight, B_wet, W
 
 def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
+    """
+    Calculate the minimum and maximum pressures on the foundation.
+
+    Args:
+        params (list): List of foundation dimensions.
+        F_z, F_RES, M_RES (float): Forces and moments.
+        rho_conc, rho_ballast_wet, rho_water (float): Densities of concrete, ballast, and water.
+
+    Returns:
+        tuple: Minimum and maximum pressures, ballast weight, buoyancy force, net vertical load, and total weight.
+    """
     d1 = params[0]
     vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
     M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])
@@ -40,6 +83,16 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
 def plot_foundation_comparison(original_params, optimized_params):
+    """
+    Plot a comparison of the original and optimized foundation designs.
+
+    Args:
+        original_params (list): List of original foundation dimensions.
+        optimized_params (list): List of optimized foundation dimensions.
+
+    Returns:
+        matplotlib.figure.Figure: Comparison plot.
+    """
     fig, ax = plt.subplots(figsize=(20, 15))
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
@@ -78,6 +131,17 @@ def plot_foundation_comparison(original_params, optimized_params):
     return fig
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
+    """
+    Run calculations for the given parameters.
+
+    Args:
+        F_z, F_RES, M_RES (float): Forces and moments.
+        rho_conc, rho_ballast_wet, rho_water (float): Densities of concrete, ballast, and water.
+        params (list): List of foundation dimensions.
+
+    Returns:
+        tuple: Results dictionary and concrete volume.
+    """
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
 
@@ -100,6 +164,18 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
     return result, concrete_volume
 
 def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
+    """
+    Optimize the foundation design.
+
+    Args:
+        F_z, F_RES, M_RES (float): Forces and moments.
+        rho_conc, rho_ballast_wet, rho_water (float): Densities of concrete, ballast, and water.
+        initial_params (list): List of initial foundation dimensions.
+        h_anchor (float): Anchor height.
+
+    Returns:
+        tuple: Optimization results, optimized concrete volume, and comparison plot.
+    """
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
 
     def objective(x):
@@ -165,6 +241,15 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
 
 def plot_3d_foundation(params):
+    """
+    Plot a 3D model of the foundation.
+
+    Args:
+        params (list): List of foundation dimensions.
+
+    Returns:
+        plotly.graph_objects.Figure: 3D model plot.
+    """
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
     fig = go.Figure()
@@ -217,8 +302,16 @@ def plot_3d_foundation(params):
 
     return fig
 
-# Define plot_concrete_volume function
 def plot_concrete_volume(volume_data):
+    """
+    Plot a comparison of concrete volumes.
+
+    Args:
+        volume_data (DataFrame): Dataframe with concrete volume data.
+
+    Returns:
+        matplotlib.figure.Figure: Concrete volume comparison plot.
+    """
     fig, ax = plt.subplots()
     bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
     for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
@@ -227,8 +320,6 @@ def plot_concrete_volume(volume_data):
     plt.xlabel('Concrete Volume (m³)')
     plt.title('Concrete Volume Comparison')
     return fig
-
-# Function definitions with docstrings remain unchanged...
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -268,85 +359,6 @@ initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 # Initialize session state for original concrete volume
 if 'original_concrete_volume' not in st.session_state:
     st.session_state['original_concrete_volume'] = None
-
-def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
-    total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
-
-    result = {
-        "Parameter": [
-            "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2"
-        ],
-        "Value": [
-            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
-            f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m"
-        ]
-    }
-
-    concrete_volume = (C1 + C2 + C3 + C4)
-    return result, concrete_volume
-
-def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
-    bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
-
-    def objective(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        _, _, _, _, _, total_weight = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return total_weight
-
-    def constraint_pmin(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return p_min - 0
-
-    def constraint_theta(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        d1, d2, h2 = params[0], params[1], params[3]
-        theta = np.degrees(np.arctan(h2 / ((d1 - d2) / 2)))
-        return 13 - theta
-
-    def constraint_h3(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        h3, h1, h2 = params[4], params[2], params[3]
-        return (h1 + h2) - h3
-
-    def constraint_anchor(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
-        return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
-
-    cons = [{'type': 'ineq', 'fun': constraint_pmin},
-            {'type': 'ineq', 'fun': constraint_theta},
-            {'type': 'ineq', 'fun': constraint_h3},
-            {'type': 'ineq', 'fun': constraint_anchor}]
-
-    try:
-        result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
-                          bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
-
-        if result.success:
-            optimized_params = result.x
-            params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-            total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
-
-            result_output = {
-                "Parameter": [
-                    "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2"
-                ],
-                "Value": [
-                    f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
-                    f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m"
-                ]
-            }
-
-            optimized_concrete_volume = (C1 + C2 + C3 + C4)
-            fig = plot_foundation_comparison(initial_params, params)
-            return result_output, optimized_concrete_volume, fig
-        else:
-            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
-    except Exception as e:
-        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
 
 st.header("Run Calculations")
 if st.button("Run Calculations"):
