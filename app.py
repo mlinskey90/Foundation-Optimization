@@ -260,7 +260,12 @@ st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
-    result_df = pd.DataFrame(result_output)
+
+    # Filter out the unwanted parameters
+    keys_to_remove = ["C1", "C2", "C3", "C4", "Total weight", "B_wet", "W", "F_z", "net_load"]
+    filtered_result_output = {k: v for k, v in result_output.items() if k not in keys_to_remove}
+
+    result_df = pd.DataFrame(filtered_result_output)
     result_html = result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
     st.subheader("Concrete Volume")
@@ -270,7 +275,11 @@ if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
 
     original_values = [f"{val:.3f} m" for val in initial_params]
-    result_df = pd.DataFrame(result_output)
+    
+    # Filter out the unwanted parameters
+    filtered_result_output = {k: v for k, v in result_output.items() if k not in keys_to_remove}
+
+    result_df = pd.DataFrame(filtered_result_output)
     result_df.columns = ["Parameter", "Optimized Value"]
     result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
 
