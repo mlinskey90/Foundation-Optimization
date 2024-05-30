@@ -268,11 +268,15 @@ if st.button("Run Calculations"):
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+
+    # Map original values to original_params for display
+    original_values = [f"{val:.3f} m" for val in initial_params]
+
     result_df = pd.DataFrame(result_output)
-    
+
     # Rename columns and add the optimized values
-    result_df.columns = ["Parameter", "Original Value"]
-    result_df["Optimized Value"] = [value if value != 'nan m' else 'N/A' for value in result_output["Value"]]
+    result_df.columns = ["Parameter", "Optimized Value"]
+    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
 
     st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
     
@@ -301,5 +305,3 @@ if st.button("Optimize Foundation"):
         
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
-    st.pyplot(fig)
-    st.plotly_chart(plot_3d_foundation(initial_params))
