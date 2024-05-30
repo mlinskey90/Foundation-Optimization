@@ -7,16 +7,6 @@ import matplotlib.pyplot as plt
 
 # Function definitions with docstrings
 def calculate_foundation_weight(params, rho_conc):
-    """
-    Calculate the weight of the foundation components.
-
-    Parameters:
-    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
-    rho_conc (float): Density of concrete.
-
-    Returns:
-    tuple: Total weight and individual component weights.
-    """
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
     C2 = (1/3) * np.pi * ((d1/2)**2 + (d1/2 * d2/2) + (d2/2)**2) * h2
@@ -26,19 +16,6 @@ def calculate_foundation_weight(params, rho_conc):
     return total_weight, C1, C2, C3, C4
 
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
-    """
-    Calculate the ballast weight and buoyancy.
-
-    Parameters:
-    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5].
-    C2, C4 (float): Volumes of haunch and downstand components.
-    rho_ballast_wet (float): Density of wet ballast.
-    rho_water (float): Density of water.
-    rho_conc (float): Density of concrete.
-
-    Returns:
-    tuple: Ballast weight and buoyancy.
-    """
     d1, d2, h1, h2, h3, h4, h5 = params[:7]
     h_water = h1 + h2 + h3 - h4
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
@@ -46,43 +23,15 @@ def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, r
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
-    """
-    Calculate the net vertical load on the foundation.
-
-    Parameters:
-    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
-    F_z (float): Vertical force.
-    rho_conc (float): Density of concrete.
-    rho_ballast_wet (float): Density of wet ballast.
-    rho_water (float): Density of water.
-
-    Returns:
-    tuple: Net load, total weight, ballast weight, and buoyancy.
-    """
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
     return net_load, total_weight, B_wet, W
 
 def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
-    """
-    Calculate the minimum and maximum pressures on the foundation.
-
-    Parameters:
-    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
-    F_z (float): Vertical force.
-    F_RES (float): Horizontal force.
-    M_RES (float): Resultant moment.
-    rho_conc (float): Density of concrete.
-    rho_ballast_wet (float): Density of wet ballast.
-    rho_water (float): Density of water.
-
-    Returns:
-    tuple: Minimum and maximum pressures, ballast weight, buoyancy, vertical load, and total weight.
-    """
     d1 = params[0]
     vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
-    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])  # M_RES2 = M_RES + F_RES x (h1 + h2 + h3)
+    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])
     resultant_moment = M_RES2
 
     p_min = (vertical_load / (np.pi * d1**2 / 4)) - (resultant_moment / (np.pi * d1**3 / 32))
@@ -92,7 +41,6 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
-    # Set white background and black text
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
     ax.tick_params(axis='x', colors='black')
@@ -162,7 +110,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
-        return p_min - 0  # Ensure p_min is greater than 0 kN/m²
+        return p_min - 0
 
     def constraint_theta(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
@@ -253,10 +201,10 @@ def plot_3d_foundation(params):
                 flatshading=True
             ))
 
-    add_cylinder(fig, d1 / 2, h1, 0, 'gray')  # slab
-    add_conical_frustum(fig, d1 / 2, d2 / 2, h2, h1, 'gray')  # haunch
-    add_cylinder(fig, d2 / 2, h3, h1 + h2, 'gray', top=True)  # plinth
-    add_conical_frustum(fig, b1 / 2, b2 / 2, 0, -h5, 'gray')  # downstand
+    add_cylinder(fig, d1 / 2, h1, 0, 'gray')
+    add_conical_frustum(fig, d1 / 2, d2 / 2, h2, h1, 'gray')
+    add_cylinder(fig, d2 / 2, h3, h1 + h2, 'gray', top=True)
+    add_conical_frustum(fig, b1 / 2, b2 / 2, 0, -h5, 'gray')
 
     fig.update_layout(scene=dict(
         xaxis_title='Width (m)',
@@ -313,7 +261,7 @@ if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
     result_df = pd.DataFrame(result_output)
-    st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
+    st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
     st.subheader("Concrete Volume")
     st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
 
@@ -321,7 +269,13 @@ st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
     result_df = pd.DataFrame(result_output)
-    st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
+    
+    # Rename columns and add the optimized values
+    result_df.columns = ["Parameter", "Original Value"]
+    result_df["Optimized Value"] = [value if value != 'nan m' else 'N/A' for value in result_output["Value"]]
+
+    st.dataframe(result_df.style.hide(axis="index").set_table_styles([dict(selector='th', props=[('max-width', '200px')]), dict(selector='td', props=[('max-width', '200px')])]), use_container_width=True)
+    
     st.subheader("Concrete Volume Comparison")
     if st.session_state['original_concrete_volume'] is not None:
         st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
