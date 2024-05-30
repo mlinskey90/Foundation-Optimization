@@ -7,6 +7,16 @@ import matplotlib.pyplot as plt
 
 # Function definitions with docstrings
 def calculate_foundation_weight(params, rho_conc):
+    """
+    Calculate the weight of the foundation components.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    rho_conc (float): Density of concrete.
+
+    Returns:
+    tuple: Total weight and individual component weights.
+    """
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
     C2 = (1/3) * np.pi * ((d1/2)**2 + (d1/2 * d2/2) + (d2/2)**2) * h2
@@ -16,6 +26,19 @@ def calculate_foundation_weight(params, rho_conc):
     return total_weight, C1, C2, C3, C4
 
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
+    """
+    Calculate the ballast weight and buoyancy.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5].
+    C2, C4 (float): Volumes of haunch and downstand components.
+    rho_ballast_wet (float): Density of wet ballast.
+    rho_water (float): Density of water.
+    rho_conc (float): Density of concrete.
+
+    Returns:
+    tuple: Ballast weight and buoyancy.
+    """
     d1, d2, h1, h2, h3, h4, h5 = params[:7]
     h_water = h1 + h2 + h3 - h4
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
@@ -23,15 +46,43 @@ def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, r
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
+    """
+    Calculate the net vertical load on the foundation.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    F_z (float): Vertical force.
+    rho_conc (float): Density of concrete.
+    rho_ballast_wet (float): Density of wet ballast.
+    rho_water (float): Density of water.
+
+    Returns:
+    tuple: Net load, total weight, ballast weight, and buoyancy.
+    """
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
     return net_load, total_weight, B_wet, W
 
 def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
+    """
+    Calculate the minimum and maximum pressures on the foundation.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    F_z (float): Vertical force.
+    F_RES (float): Horizontal force.
+    M_RES (float): Resultant moment.
+    rho_conc (float): Density of concrete.
+    rho_ballast_wet (float): Density of wet ballast.
+    rho_water (float): Density of water.
+
+    Returns:
+    tuple: Minimum and maximum pressures, ballast weight, buoyancy, vertical load, and total weight.
+    """
     d1 = params[0]
     vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
-    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])
+    M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])  # M_RES2 = M_RES + F_RES x (h1 + h2 + h3)
     resultant_moment = M_RES2
 
     p_min = (vertical_load / (np.pi * d1**2 / 4)) - (resultant_moment / (np.pi * d1**3 / 32))
@@ -41,6 +92,7 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
+    # Set white background and black text
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
     ax.tick_params(axis='x', colors='black')
@@ -183,9 +235,9 @@ def plot_3d_foundation(params):
     def add_conical_frustum(fig, r1, r2, height, z_shift, color):
         theta = np.linspace(0, 2 * np.pi, 100)
         x1 = r1 * np.cos(theta)
-        y1 = r1 *sin(theta)
+        y1 = r1 * np.sin(theta)
         x2 = r2 * np.cos(theta)
-        y2 = r2 * sin(theta)
+        y2 = r2 * np.sin(theta)
         z = np.linspace(0, height, 2)
         X1, Z1 = np.meshgrid(x1, z)
         Y1, Z1 = np.meshgrid(y1, z)
@@ -224,38 +276,31 @@ st.title("Foundation Optimization")
 image_path = "foundation.PNG"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
-# Input parameters in columns
-st.header("Input Parameters")
+# Sidebar Inputs
+st.sidebar.header("Input Parameters")
+st.sidebar.subheader("Load Cases")
+F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.000, format="%.3f")
+F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.900, format="%.3f")
+M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.200, format="%.3f")
+M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080, format="%.3f")
 
-# Define columns
-col1, col2, col3 = st.columns(3)
+st.sidebar.subheader("Material Properties")
+q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f")
+rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
+rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
+rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
 
-with col1:
-    st.subheader("Load Cases")
-    F_z = st.number_input(r'$F_z$ (kN)', value=3300.000, format="%.3f")
-    F_RES = st.number_input(r'$F_{RES}$ (kN)', value=511.900, format="%.3f")
-    M_z = st.number_input(r'$M_z$ (kNm)', value=2264.200, format="%.3f")
-    M_RES = st.number_input(r'$M_{RES}$ (kNm)', value=39122.080, format="%.3f")
-
-with col2:
-    st.subheader("Material Properties")
-    q_max = st.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f")
-    rho_conc = st.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
-    rho_ballast_wet = st.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
-    rho_ballast_dry = st.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
-
-with col3:
-    st.subheader("Dimensions")
-    d1 = st.number_input('d1 (m)', value=21.600, format="%.3f")
-    d2 = st.number_input('d2 (m)', value=6.000, format="%.3f")
-    h1 = st.number_input('h1 (m)', value=0.500, format="%.3f")
-    h2 = st.number_input('h2 (m)', value=1.400, format="%.3f")
-    h3 = st.number_input('h3 (m)', value=0.795, format="%.3f")
-    h4 = st.number_input('h4 (m)', value=0.100, format="%.3f")
-    h5 = st.number_input('h5 (m)', value=0.250, format="%.3f")
-    b1 = st.number_input('b1 (m)', value=6.000, format="%.3f")
-    b2 = st.number_input('b2 (m)', value=5.500, format="%.3f")
-    h_anchor = st.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
+st.sidebar.subheader("Dimensions")
+d1 = st.sidebar.number_input('d1 (m)', value=21.600, format="%.3f")
+d2 = st.sidebar.number_input('d2 (m)', value=6.000, format="%.3f")
+h1 = st.sidebar.number_input('h1 (m)', value=0.500, format="%.3f")
+h2 = st.sidebar.number_input('h2 (m)', value=1.400, format="%.3f")
+h3 = st.sidebar.number_input('h3 (m)', value=0.795, format="%.3f")
+h4 = st.sidebar.number_input('h4 (m)', value=0.100, format="%.3f")
+h5 = st.sidebar.number_input('h5 (m)', value=0.250, format="%.3f")
+b1 = st.sidebar.number_input('b1 (m)', value=6.000, format="%.3f")
+b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f")
+h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
