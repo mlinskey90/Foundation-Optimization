@@ -322,4 +322,54 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
                     "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2"
                 ],
                 "Value": [
-                    f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f}
+                    f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
+                    f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m"
+                ]
+            }
+
+            optimized_concrete_volume = (C1 + C2 + C3 + C4)
+            fig = plot_foundation_comparison(initial_params, params)
+            return result_output, optimized_concrete_volume, fig
+        else:
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+    except Exception as e:
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
+
+st.header("Run Calculations")
+if st.button("Run Calculations"):
+    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
+    st.session_state['original_concrete_volume'] = original_concrete_volume
+
+    result_df = pd.DataFrame(result_output)
+    result_html = result_df.to_html(index=False)
+    st.markdown(result_html, unsafe_allow_html=True)
+    st.subheader("Concrete Volume")
+    st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
+
+st.header("Optimize Foundation")
+if st.button("Optimize Foundation"):
+    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+
+    original_values = [f"{val:.3f} m" for val in initial_params]
+
+    result_df = pd.DataFrame(result_output)
+    result_df.columns = ["Parameter", "Optimized Value"]
+    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
+
+    result_html = result_df.to_html(index=False)
+    st.markdown(result_html, unsafe_allow_html=True)
+
+    st.subheader("Concrete Volume Comparison")
+    if st.session_state['original_concrete_volume'] is not None:
+        st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
+    st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
+    if st.session_state['original_concrete_volume'] is not None:
+        volume_data = pd.DataFrame({
+            'Volume': ['Original', 'Optimized'],
+            'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
+        })
+        fig_volume = plot_concrete_volume(volume_data)
+        st.pyplot(fig_volume)
+
+    st.pyplot(fig)
+    st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
