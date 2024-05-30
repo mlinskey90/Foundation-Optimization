@@ -221,7 +221,7 @@ def plot_3d_foundation(params):
 st.title("Foundation Optimization")
 
 # Load and display the uploaded image
-image_path = "foundation.PNG"
+image_path = "/mnt/data/image.png"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
 # Sidebar Inputs
@@ -256,6 +256,14 @@ initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 if 'original_concrete_volume' not in st.session_state:
     st.session_state['original_concrete_volume'] = None
 
+def filter_result_output(result_output, keys_to_remove):
+    filtered_result_output = {"Parameter": [], "Value": []}
+    for param, value in zip(result_output["Parameter"], result_output["Value"]):
+        if param not in keys_to_remove:
+            filtered_result_output["Parameter"].append(param)
+            filtered_result_output["Value"].append(value)
+    return filtered_result_output
+
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
@@ -263,9 +271,9 @@ if st.button("Run Calculations"):
 
     # Filter out the unwanted parameters
     keys_to_remove = ["C1", "C2", "C3", "C4", "Total weight", "B_wet", "W", "F_z", "net_load"]
-    filtered_result_output = {k: v for k, v in zip(result_output["Parameter"], result_output["Value"]) if k not in keys_to_remove}
+    filtered_result_output = filter_result_output(result_output, keys_to_remove)
 
-    filtered_result_df = pd.DataFrame(filtered_result_output.items(), columns=["Parameter", "Value"])
+    filtered_result_df = pd.DataFrame(filtered_result_output)
     result_html = filtered_result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
     st.subheader("Concrete Volume")
@@ -278,9 +286,10 @@ if st.button("Optimize Foundation"):
     original_values = [f"{val:.3f} m" for val in initial_params]
     
     # Filter out the unwanted parameters
-    filtered_result_output = {k: v for k, v in zip(result_output["Parameter"], result_output["Value"]) if k not in keys_to_remove}
+    filtered_result_output = filter_result_output(result_output, keys_to_remove)
 
-    filtered_result_df = pd.DataFrame(filtered_result_output.items(), columns=["Parameter", "Optimized Value"])
+    filtered_result_df = pd.DataFrame(filtered_result_output)
+    filtered_result_df.columns = ["Parameter", "Optimized Value"]
     filtered_result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(filtered_result_df) - len(original_values)))
 
     result_html = filtered_result_df.to_html(index=False)
@@ -297,6 +306,9 @@ if st.button("Optimize Foundation"):
         })
         fig_volume = plot_concrete_volume(volume_data)
         st.pyplot(fig_volume)
+
+    st.pyplot(fig)
+    st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
 
     st.pyplot(fig)
     st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
