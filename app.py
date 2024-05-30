@@ -5,8 +5,18 @@ import plotly.graph_objects as go
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
-# Function definitions
+# Function definitions with docstrings
 def calculate_foundation_weight(params, rho_conc):
+    """
+    Calculate the weight of the foundation components.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    rho_conc (float): Density of concrete.
+
+    Returns:
+    tuple: Total weight and individual component weights.
+    """
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
     C2 = (1/3) * np.pi * ((d1/2)**2 + (d1/2 * d2/2) + (d2/2)**2) * h2
@@ -16,19 +26,60 @@ def calculate_foundation_weight(params, rho_conc):
     return total_weight, C1, C2, C3, C4
 
 def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
-    d1, d2, h1, h2, h3, h4, h5 = params[0], params[1], params[2], params[3], params[4], params[5], params[6]
+    """
+    Calculate the ballast weight and buoyancy.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5].
+    C2, C4 (float): Volumes of haunch and downstand components.
+    rho_ballast_wet (float): Density of wet ballast.
+    rho_water (float): Density of water.
+    rho_conc (float): Density of concrete.
+
+    Returns:
+    tuple: Ballast weight and buoyancy.
+    """
+    d1, d2, h1, h2, h3, h4, h5 = params
     h_water = h1 + h2 + h3 - h4
-    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - (C2) - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
-    W = (((np.pi * (d1 ** 2)) / 4) * h_water + (C4)) * rho_water
+    B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
+    W = (((np.pi * (d1 ** 2)) / 4) * h_water + C4) * rho_water
     return B_wet, W
 
 def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
+    """
+    Calculate the net vertical load on the foundation.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    F_z (float): Vertical force.
+    rho_conc (float): Density of concrete.
+    rho_ballast_wet (float): Density of wet ballast.
+    rho_water (float): Density of water.
+
+    Returns:
+    tuple: Net load, total weight, ballast weight, and buoyancy.
+    """
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
     return net_load, total_weight, B_wet, W
 
 def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
+    """
+    Calculate the minimum and maximum pressures on the foundation.
+
+    Parameters:
+    params (list): Foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    F_z (float): Vertical force.
+    F_RES (float): Horizontal force.
+    M_RES (float): Resultant moment.
+    rho_conc (float): Density of concrete.
+    rho_ballast_wet (float): Density of wet ballast.
+    rho_water (float): Density of water.
+
+    Returns:
+    tuple: Minimum and maximum pressures, ballast weight, buoyancy, vertical load, and total weight.
+    """
     d1 = params[0]
     vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
     M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])  # M_RES2 = M_RES + F_RES x (h1 + h2 + h3)
@@ -40,6 +91,18 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
     return p_min, p_max, B_wet, W, vertical_load, total_weight
 
 def plot_foundation_comparison(original_params, optimized_params, chart_height=300, chart_width=800):
+    """
+    Plot the comparison between original and optimized foundation parameters.
+
+    Parameters:
+    original_params (list): Original foundation dimensions [d1, d2, h1, h2, h3, h4, h5, b1, b2].
+    optimized_params (list): Optimized foundation dimensions.
+    chart_height (int): Height of the chart.
+    chart_width (int): Width of the chart.
+
+    Returns:
+    go.Figure: Plotly figure object.
+    """
     fig = go.Figure()
 
     def plot_foundation(params, linecolor, fillcolor, name):
@@ -72,8 +135,7 @@ def plot_foundation_comparison(original_params, optimized_params, chart_height=3
 
     # Calculate axis limits based on foundation dimensions
     max_width = max(original_params[0], optimized_params[0]) / 2
-    max_height = max(original_params[1] + original_params[2] + original_params[3],
-                     optimized_params[1] + optimized_params[2] + optimized_params[3])
+    max_height = max(original_params[1] + original_params[2] + original_params[3], optimized_params[1] + optimized_params[2] + optimized_params[3])
     min_height = min(-original_params[8], -optimized_params[8])
 
     fig.update_layout(
@@ -86,9 +148,9 @@ def plot_foundation_comparison(original_params, optimized_params, chart_height=3
         width=700,
         margin=dict(l=0, r=0, t=0, b=0),
         template='plotly_white',
-        plot_bgcolor='white',  # Set background color to white
-        paper_bgcolor='white',  # Set paper color to white
-        font=dict(color='black')  # Force text color to black
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        font=dict(color='black')
     )
 
     return fig
@@ -241,29 +303,26 @@ def plot_3d_foundation(params):
     return fig
 
 # Streamlit Interface
-st.title("Foundation Optimization")
+t.title("Foundation Optimization")
 
 # Load and display the image above the "Run Calculations" button
 image_path = "foundation.PNG"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
+# Sidebar Inputs
 st.sidebar.header("Input Parameters")
-
-# Load Cases
 st.sidebar.subheader("Load Cases")
 F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.000, format="%.3f")
 F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.900, format="%.3f")
 M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.200, format="%.3f")
 M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080, format="%.3f")
 
-# Material Properties
 st.sidebar.subheader("Material Properties")
 q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f")
 rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
 rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
 rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
 
-# Dimensions
 st.sidebar.subheader("Dimensions")
 d1 = st.sidebar.number_input('d1 (m)', value=21.600, format="%.3f")
 d2 = st.sidebar.number_input('d2 (m)', value=6.000, format="%.3f")
@@ -285,7 +344,7 @@ if 'original_concrete_volume' not in st.session_state:
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
-    st.session_state['original_concrete_volume'] = original_concrete_volume  # Store the original concrete volume in session state
+    st.session_state['original_concrete_volume'] = original_concrete_volume
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     st.subheader("Concrete Volume")
@@ -297,7 +356,7 @@ if st.button("Optimize Foundation"):
     result_df = pd.DataFrame(result_output)
     st.dataframe(result_df.style.hide(axis="index"), use_container_width=True)
     if fig is not None:
-        st.plotly_chart(fig)  # Using plotly_chart to display Plotly figure
+        st.plotly_chart(fig)
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -308,23 +367,17 @@ if st.button("Optimize Foundation"):
                 'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
             })
 
-            # Plot horizontal bar chart with colors and embedded text
             def plot_concrete_volume(volume_data):
                 fig, ax = plt.subplots()
                 bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-
-                # Adding custom labels
                 for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
                     width = bar.get_width()
                     ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
-
                 plt.xlabel('Concrete Volume (m³)')
                 plt.title('Concrete Volume Comparison')
                 return fig
 
-            # Plot and display in Streamlit
             fig = plot_concrete_volume(volume_data)
             st.pyplot(fig)
 
-        # Plot the 3D foundation geometry
         st.plotly_chart(plot_3d_foundation(initial_params))
