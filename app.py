@@ -221,7 +221,7 @@ def plot_3d_foundation(params):
 st.title("Foundation Optimization")
 
 # Load and display the uploaded image
-image_path = "/mnt/data/image.png"
+image_path = "foundation.PNG"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
 # Sidebar Inputs
