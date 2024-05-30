@@ -92,6 +92,15 @@ def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rh
 
 def plot_foundation_comparison(original_params, optimized_params):
     fig, ax = plt.subplots(figsize=(20, 15))
+    # Set white background and black text
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+    ax.tick_params(axis='x', colors='black')
+    ax.tick_params(axis='y', colors='black')
+    ax.xaxis.label.set_color('black')
+    ax.yaxis.label.set_color('black')
+    ax.title.set_color('black')
+    
     def plot_foundation(params, edgecolor, fillcolor, label):
         d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
         plinth_x = [-d2/2, d2/2, d2/2, -d2/2, -d2/2]
@@ -110,13 +119,14 @@ def plot_foundation_comparison(original_params, optimized_params):
         ax.fill(haunch_x, haunch_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
         ax.fill(slab_x, slab_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
         ax.fill(downstand_x, downstand_y, color=fillcolor, alpha=0.3, edgecolor=edgecolor)
+        
     plot_foundation(original_params, 'black', 'grey', 'Original')
     plot_foundation(optimized_params, 'green', 'lightgreen', 'Optimized')
     ax.set_aspect('equal')
-    plt.xlabel('Width (m)')
-    plt.ylabel('Height (m)')
+    plt.xlabel('Width (m)', color='black')
+    plt.ylabel('Height (m)', color='black')
     plt.legend()
-    plt.title('Foundation Comparison')
+    plt.title('Foundation Comparison', color='black')
     return fig
 
 # Example usage with some parameters and chart size
@@ -124,7 +134,7 @@ original_params = [10, 8, 2, 1, 1, 1, 1, 6, 5]
 optimized_params = [9, 7, 1.5, 1, 1, 1, 1, 5, 4]
 
 fig = plot_foundation_comparison(original_params, optimized_params)
-fig.show()
+st.pyplot(fig, use_container_width=True)
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
