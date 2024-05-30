@@ -123,7 +123,7 @@ def plot_foundation_comparison(original_params, optimized_params):
 original_params = [10, 8, 2, 1, 1, 1, 1, 6, 5]
 optimized_params = [9, 7, 1.5, 1, 1, 1, 1, 5, 4]
 
-fig = plot_foundation_comparison(original_params, optimized_params, chart_height=300, chart_width=800)
+fig = plot_foundation_comparison(original_params, optimized_params)
 fig.show()
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
@@ -137,7 +137,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
             "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
-            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
+            f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]::.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
             f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
@@ -267,7 +267,7 @@ def plot_3d_foundation(params):
     return fig
 
 # Streamlit Interface
-t.title("Foundation Optimization")
+st.title("Foundation Optimization")
 
 # Load and display the image above the "Run Calculations" button
 image_path = "foundation.PNG"
