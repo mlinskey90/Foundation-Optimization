@@ -217,11 +217,24 @@ def plot_3d_foundation(params):
 
     return fig
 
+# Define plot_concrete_volume function
+def plot_concrete_volume(volume_data):
+    fig, ax = plt.subplots()
+    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+    for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
+        width = bar.get_width()
+        ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
+    plt.xlabel('Concrete Volume (m³)')
+    plt.title('Concrete Volume Comparison')
+    return fig
+
+# Function definitions with docstrings remain unchanged...
+
 # Streamlit Interface
 st.title("Foundation Optimization")
 
 # Load and display the uploaded image
-image_path = "foundation.PNG"
+image_path = "/mnt/data/image.png"
 st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 
 # Sidebar Inputs
