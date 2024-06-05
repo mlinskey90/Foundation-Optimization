@@ -156,7 +156,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballas
                 ],
                 "Value": [
                     f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
-                    f"{params[5]::.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
+                    f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
                     f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{B_dry:.3f} kN", f"{W:.3f} kN",
                     f"{F_z:.3f} kN", f"{net_load:.3f} kN"
                 ]
@@ -305,11 +305,22 @@ if st.button("Optimize Foundation"):
     result_df = pd.DataFrame(result_output)
     result_df.columns = ["Parameter", "Optimized Value"]
     
+    # Debugging prints
+    st.write("Debugging Info:")
+    st.write(f"Original values: {original_values}")
+    st.write(f"Result DF: {result_df}")
+    
     # Ensure the length of original_values matches the number of rows in result_df
     num_original_params = len(original_values)
     num_result_rows = len(result_df)
+    
+    st.write(f"num_original_params: {num_original_params}")
+    st.write(f"num_result_rows: {num_result_rows}")
+    
     if num_original_params < num_result_rows:
         original_values.extend(["N/A"] * (num_result_rows - num_original_params))
+    elif num_original_params > num_result_rows:
+        original_values = original_values[:num_result_rows]
 
     result_df.insert(1, "Original Value", original_values)
 
