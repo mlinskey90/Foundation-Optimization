@@ -15,7 +15,7 @@ def calculate_foundation_weight(params, rho_conc):
     total_weight = (C1 + C2 + C3 + C4) * rho_conc
     return total_weight, C1, C2, C3, C4
 
-def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc):
+def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_ballast_dry, rho_water, rho_conc):
     d1, d2, h1, h2, h3, h4, h5 = params[:7]
     h_water = h1 + h2 + h3 - h4
     B_wet = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - C2 - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_wet
@@ -23,15 +23,15 @@ def calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, r
     W = (((np.pi * (d1 ** 2)) / 4) * h_water + C4) * rho_water
     return B_wet, W
 
-def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water):
+def net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_conc)
+    B_wet, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_ballast_dry, rho_water, rho_conc)
     net_load = W + B_wet + total_weight + F_z
     return net_load, total_weight, B_wet, W
 
-def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water):
+def calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water):
     d1 = params[0]
-    vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_water)
+    vertical_load, total_weight, B_wet, W = net_vertical_load(params, F_z, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)
     M_RES2 = M_RES + F_RES * (params[2] + params[3] + params[4])
     resultant_moment = M_RES2
 
@@ -78,9 +78,9 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.title('Foundation Comparison', color='black')
     return fig
 
-def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, params):
+def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
+    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:5]
 
     result = {
         "Parameter": [
@@ -100,17 +100,17 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, pa
     concrete_volume = (C1 + C2 + C3 + C4)
     return result, concrete_volume
 
-def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, initial_params, h_anchor):
+def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water, initial_params, h_anchor):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
 
     def objective(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        _, _, _, _, _, total_weight = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+        _, _, _, _, _, total_weight = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)
         return total_weight
 
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)
+        p_min, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)
         return p_min - 0
 
     def constraint_theta(x):
@@ -142,7 +142,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             optimized_params = result.x
             params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
             total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water)[:5]
+            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:5]
 
             result_output = {
                 "Parameter": [
@@ -240,8 +240,6 @@ def plot_steel_and_ballast(data):
     plt.ylabel('Weight (t)')
     plt.title('Steel and Ballast Weight Comparison')
     return fig
-
-# Function definitions with docstrings remain unchanged...
 
 # Streamlit Interface
 st.title("Foundation Optimization")
@@ -363,7 +361,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
 
 st.header("Run Calculations")
 if st.button("Run Calculations"):
-    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params)
+    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
 
     result_df = pd.DataFrame(result_output)
@@ -374,7 +372,7 @@ if st.button("Run Calculations"):
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
-    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, initial_params, h_anchor)
+    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81, initial_params, h_anchor)
 
     original_values = [f"{val:.3f} m" for val in initial_params]
 
@@ -403,8 +401,8 @@ if st.button("Optimize Foundation"):
     # Additional Calculations for Steel and Ballast
     original_steel = 0.135 * st.session_state['original_concrete_volume']
     optimized_steel = 0.15 * optimized_concrete_volume
-    original_ballast = rho_ballast_dry / 10
-    optimized_ballast = rho_ballast_dry / 10
+    original_ballast = rho_ballast_dry * st.session_state['original_concrete_volume']
+    optimized_ballast = rho_ballast_dry * optimized_concrete_volume
 
     weight_data = pd.DataFrame({
         'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
