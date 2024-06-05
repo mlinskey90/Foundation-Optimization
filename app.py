@@ -133,7 +133,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     def constraint_new(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         h1, h2, h3 = params[2], params[3], params[4]
-        return (h1 + h2) - 0.8 * (h1 + h2 + h3)
+        return (h1 + h2) - 0.6 * (h1 + h2 + h3)
 
     cons = [{'type': 'ineq', 'fun': constraint_pmin},
             {'type': 'ineq', 'fun': constraint_theta},
