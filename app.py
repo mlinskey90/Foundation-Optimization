@@ -80,25 +80,25 @@ def plot_foundation_comparison(original_params, optimized_params):
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water, params):
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-    p_min, p_max, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:5]
+    p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:5]
 
     result = {
         "Parameter": [
             "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
             "C1", "C2", "C3", "C4",
-            "Total weight", "p_min", "p_max", "B_dry", "W", "F_z", "net_load"
+            "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
         ],
         "Value": [
             f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
             f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
             f"{C1:.3f} m³", f"{C2:.3f} m³", f"{C3:.3f} m³", f"{C4:.3f} m³",
-            f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_dry:.3f} kN", f"{W:.3f} kN",
+            f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
             f"{F_z:.3f} kN", f"{net_load:.3f} kN"
         ]
     }
 
     concrete_volume = (C1 + C2 + C3 + C4)
-    return result, concrete_volume, B_dry
+    return result, concrete_volume, B_wet
 
 def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water, initial_params, h_anchor):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
@@ -142,24 +142,24 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballas
             optimized_params = result.x
             params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
             total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
-            p_min, p_max, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:5]
+            p_min, p_max, B_wet, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:5]
 
             result_output = {
                 "Parameter": [
                     "d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2",
-                    "Total weight", "p_min", "p_max", "B_dry", "W", "F_z", "net_load"
+                    "Total weight", "p_min", "p_max", "B_wet", "W", "F_z", "net_load"
                 ],
                 "Value": [
                     f"{params[0]:.3f} m", f"{params[1]:.3f} m", f"{params[2]:.3f} m", f"{params[3]:.3f} m", f"{params[4]:.3f} m",
                     f"{params[5]:.3f} m", f"{params[6]:.3f} m", f"{params[7]:.3f} m", f"{params[8]:.3f} m",
-                    f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_dry:.3f} kN", f"{W:.3f} kN",
+                    f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{W:.3f} kN",
                     f"{F_z:.3f} kN", f"{net_load:.3f} kN"
                 ]
             }
 
             optimized_concrete_volume = (C1 + C2 + C3 + C4)
             fig = plot_foundation_comparison(initial_params, params)
-            return result_output, optimized_concrete_volume, fig, params, B_dry
+            return result_output, optimized_concrete_volume, fig, params, B_wet
         else:
             return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None, None
     except Exception as e:
@@ -358,6 +358,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
             return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
     except Exception as e:
         return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
+
 st.header("Run Calculations")
 if st.button("Run Calculations"):
     result_output, original_concrete_volume, original_ballast = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81, initial_params)
