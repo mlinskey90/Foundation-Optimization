@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
-# Function definitions with docstrings remain unchanged...
+# Define functions
 
 def calculate_foundation_weight(params, rho_conc):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
