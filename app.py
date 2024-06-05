@@ -166,9 +166,9 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballas
             fig = plot_foundation_comparison(initial_params, params)
             return result_output, optimized_concrete_volume, fig
         else:
-            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+            return {"Parameter": ["Optimization"], "Value": [f"Optimization failed: {result.message}"]}, None, None
     except Exception as e:
-        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
+        return {"Parameter": ["Optimization"], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
 
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
@@ -191,7 +191,7 @@ def plot_3d_foundation(params):
         x1 = r1 * np.cos(theta)
         y1 = r1 * np.sin(theta)
         x2 = r2 * np.cos(theta)
-        y2 = r2 * sin(theta)
+        y2 = r2 * np.sin(theta)
         z = np.linspace(0, height, 2)
         X1, Z1 = np.meshgrid(x1, z)
         Y1, Z1 = np.meshgrid(y1, z)
@@ -327,12 +327,14 @@ if st.button("Optimize Foundation"):
     # Additional Calculations for Steel and Ballast
     original_steel = 0.135 * st.session_state['original_concrete_volume']
     optimized_steel = 0.15 * optimized_concrete_volume
-    original_ballast = rho_ballast_dry * st.session_state['original_concrete_volume'] / 10
-    optimized_ballast = rho_ballast_dry * optimized_concrete_volume / 10
+
+    # Recalculate ballast based on the correct parameters
+    _, _, _, original_ballast_dry, _ = calculate_pressures(initial_params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81)
+    _, _, _, optimized_ballast_dry, _ = calculate_pressures([optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]], F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81)
 
     weight_data = pd.DataFrame({
         'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
-        'Weight (t)': [original_steel, optimized_steel, original_ballast, optimized_ballast]
+        'Weight (t)': [original_steel, optimized_steel, original_ballast_dry, optimized_ballast_dry]
     })
 
     fig_weight = plot_steel_and_ballast(weight_data)
