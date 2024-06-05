@@ -304,7 +304,14 @@ if st.button("Optimize Foundation"):
 
     result_df = pd.DataFrame(result_output)
     result_df.columns = ["Parameter", "Optimized Value"]
-    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
+    
+    # Ensure the length of original_values matches the number of rows in result_df
+    num_original_params = len(original_values)
+    num_result_rows = len(result_df)
+    if num_original_params < num_result_rows:
+        original_values.extend(["N/A"] * (num_result_rows - num_original_params))
+
+    result_df.insert(1, "Original Value", original_values)
 
     result_html = result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
