@@ -79,7 +79,8 @@ def plot_foundation_comparison(original_params, optimized_params):
     plt.title('Foundation Comparison', color='black')
     return fig
 
-def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water, params):
+def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, params):
+    rho_water = -9.81  # Define the water density here
     total_weight, C1, C2, C3, C4 = calculate_foundation_weight(params, rho_conc)
     p_min, p_max, B_wet, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, rho_water)[:6]
 
@@ -191,7 +192,7 @@ def plot_3d_foundation(params):
         x1 = r1 * np.cos(theta)
         y1 = r1 * np.sin(theta)
         x2 = r2 * np.cos(theta)
-        y2 = r2 * np.sin(theta)
+        y2 = r2 * sin(theta)
         z = np.linspace(0, height, 2)
         X1, Z1 = np.meshgrid(x1, z)
         Y1, Z1 = np.meshgrid(y1, z)
@@ -287,7 +288,7 @@ if 'original_concrete_volume' not in st.session_state:
 
 st.header("Run Calculations")
 if st.button("Run Calculations"):
-    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81, initial_params)
+    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
 
     result_df = pd.DataFrame(result_output)
