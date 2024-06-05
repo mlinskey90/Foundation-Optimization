@@ -159,11 +159,11 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballas
 
             optimized_concrete_volume = (C1 + C2 + C3 + C4)
             fig = plot_foundation_comparison(initial_params, params)
-            return result_output, optimized_concrete_volume, fig
+            return result_output, optimized_concrete_volume, fig, params
         else:
-            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+            return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None
     except Exception as e:
-        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None
+        return {"Parameter": [], "Value": [f"Optimization failed due to an exception: {e}"]}, None, None, None
 
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
@@ -372,7 +372,7 @@ if st.button("Run Calculations"):
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
-    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81, initial_params, h_anchor)
+    result_output, optimized_concrete_volume, fig, optimized_params = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_ballast_dry, -9.81, initial_params, h_anchor)
 
     original_values = [f"{val:.3f} m" for val in initial_params]
 
@@ -401,8 +401,9 @@ if st.button("Optimize Foundation"):
     # Additional Calculations for Steel and Ballast
     original_steel = 0.135 * st.session_state['original_concrete_volume']
     optimized_steel = 0.15 * optimized_concrete_volume
-    original_ballast = rho_ballast_dry * st.session_state['original_concrete_volume']
-    optimized_ballast = rho_ballast_dry * optimized_concrete_volume
+    
+    original_ballast, _ = calculate_ballast_and_buoyancy(initial_params, 0, 0, rho_ballast_wet, rho_ballast_dry, -9.81, rho_conc)
+    optimized_ballast, _ = calculate_ballast_and_buoyancy(optimized_params, 0, 0, rho_ballast_wet, rho_ballast_dry, -9.81, rho_conc)
 
     weight_data = pd.DataFrame({
         'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
