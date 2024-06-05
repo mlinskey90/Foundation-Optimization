@@ -191,7 +191,7 @@ def plot_3d_foundation(params):
         x1 = r1 * np.cos(theta)
         y1 = r1 * np.sin(theta)
         x2 = r2 * np.cos(theta)
-        y2 = r2 * np.sin(theta)
+        y2 = r2 * sin(theta)
         z = np.linspace(0, height, 2)
         X1, Z1 = np.meshgrid(x1, z)
         Y1, Z1 = np.meshgrid(y1, z)
