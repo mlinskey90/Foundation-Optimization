@@ -5,7 +5,8 @@ import plotly.graph_objects as go
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
-# Function definitions with docstrings
+# Function definitions with docstrings remain unchanged...
+
 def calculate_foundation_weight(params, rho_conc):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
     C1 = (np.pi * d1**2 / 4) * h1
@@ -129,10 +130,16 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
         return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
 
+    def constraint_new(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        h1, h2, h3 = params[2], params[3], params[4]
+        return (h1 + h2) - 0.8 * (h1 + h2 + h3)
+
     cons = [{'type': 'ineq', 'fun': constraint_pmin},
             {'type': 'ineq', 'fun': constraint_theta},
             {'type': 'ineq', 'fun': constraint_h3},
-            {'type': 'ineq', 'fun': constraint_anchor}]
+            {'type': 'ineq', 'fun': constraint_anchor},
+            {'type': 'ineq', 'fun': constraint_new}]
 
     try:
         result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
@@ -240,8 +247,6 @@ def plot_steel_and_ballast(data):
     plt.ylabel('Weight (t)')
     plt.title('Steel and Ballast Weight Comparison')
     return fig
-
-# Function definitions with docstrings remain unchanged...
 
 # Streamlit Interface
 st.title("Foundation Optimization")
