@@ -164,7 +164,7 @@ def plot_3d_foundation(params):
 
     fig = go.Figure()
 
-    def add_cylinder(radius, height, z_shift, color, top=False):
+    def add_cylinder(radius, height, z_shift, color, edgecolor, top=False):
         theta = np.linspace(0, 2 * np.pi, 100)
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
@@ -172,10 +172,11 @@ def plot_3d_foundation(params):
         Xc, Zc = np.meshgrid(x, z)
         Yc, Zc = np.meshgrid(y, z)
         fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+        fig.add_trace(go.Scatter3d(x=np.ravel(Xc), y=np.ravel(Yc), z=np.ravel(Zc + z_shift), mode='lines', line=dict(color=edgecolor, width=2)))
         if top:
             fig.add_trace(go.Surface(x=Xc[:, :1], y=Yc[:, :1], z=Zc[:, :1] + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
 
-    def add_conical_frustum(r1, r2, height, z_shift, color):
+    def add_conical_frustum(r1, r2, height, z_shift, color, edgecolor):
         theta = np.linspace(0, 2 * np.pi, 100)
         x1 = r1 * np.cos(theta)
         y1 = r1 * np.sin(theta)
@@ -195,24 +196,34 @@ def plot_3d_foundation(params):
                 opacity=1.0,
                 flatshading=True
             ))
+            fig.add_trace(go.Scatter3d(
+                x=np.concatenate([X1[i], X1[i+1], X2[i+1], X2[i]]),
+                y=np.concatenate([Y1[i], Y1[i+1], Y2[i+1], Y2[i]]),
+                z=np.concatenate([Z1[i], Z1[i+1], Z2[i+1], Z2[i]]) + z_shift,
+                mode='lines', line=dict(color=edgecolor, width=2)
+            ))
 
-    add_cylinder(d1 / 2, h1, 0, 'gray')
-    add_conical_frustum(d1 / 2, d2 / 2, h2, h1, 'gray')
-    add_cylinder(d2 / 2, h3, h1 + h2, 'gray', top=True)
-    add_conical_frustum(b1 / 2, b2 / 2, 0, -h5, 'gray')
+    add_cylinder(d1 / 2, h1, 0, 'gray', 'black')
+    add_conical_frustum(d1 / 2, d2 / 2, h2, h1, 'gray', 'black')
+    add_cylinder(d2 / 2, h3, h1 + h2, 'gray', 'black', top=True)
+    add_conical_frustum(b1 / 2, b2 / 2, 0, -h5, 'gray', 'black')
 
     total_height = h1 + h2 + h3 + h4 + h5
 
     fig.update_layout(scene=dict(
-        xaxis=dict(title='Width (m)', range=[-d1/2, d1/2]),
-        yaxis=dict(title='Length (m)', range=[-d1/2, d1/2]),
-        zaxis=dict(title='Height (m)', range=[-h5, h1 + h2 + h3 + h4]),
-        aspectmode='data'
+        xaxis=dict(title='Width (m)', range=[-d1/2, d1/2], backgroundcolor="brown", gridcolor="white"),
+        yaxis=dict(title='Length (m)', range=[-d1/2, d1/2], backgroundcolor="brown", gridcolor="white"),
+        zaxis=dict(title='Height (m)', range=[-h5, h1 + h2 + h3 + h4], gridcolor="white"),
+        bgcolor='skyblue'
     ))
 
     fig.update_layout(title="Optimized Foundation Geometry")
 
     return fig
+
+params = [10, 8, 2, 2, 1, 1, 1, 10, 8]
+fig = plot_3d_foundation(params)
+st.plotly_chart(fig)
 
 def plot_concrete_volume(volume_data):
     fig, ax = plt.subplots()
