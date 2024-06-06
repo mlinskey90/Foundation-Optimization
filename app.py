@@ -159,6 +159,10 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         }
         return result_output, None, None, None
 
+import numpy as np
+import plotly.graph_objects as go
+import streamlit as st
+
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
@@ -174,16 +178,15 @@ def plot_3d_foundation(params):
         fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
         
         # Adding edge lines
-        for t in theta:
-            fig.add_trace(go.Scatter3d(x=[radius * np.cos(t), radius * np.cos(t)], 
-                                       y=[radius * np.sin(t), radius * np.sin(t)], 
+        for i in range(len(theta)):
+            fig.add_trace(go.Scatter3d(x=[x[i], x[i]], 
+                                       y=[y[i], y[i]], 
                                        z=[z_shift, height + z_shift], 
                                        mode='lines', 
                                        line=dict(color=edgecolor, width=2)))
 
         if top:
-            fig.add_trace(go.Surface(x=Xc[:, :1], y=Yc[:, :1], z=Zc[:, :1] + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
-            fig.add_trace(go.Scatter3d(x=x, y=y, z=[height + z_shift] * 100, mode='lines', line=dict(color=edgecolor, width=2)))
+            fig.add_trace(go.Scatter3d(x=x, y=y, z=[height + z_shift] * len(x), mode='lines', line=dict(color=edgecolor, width=2)))
 
     def add_conical_frustum(r1, r2, height, z_shift, color, edgecolor):
         theta = np.linspace(0, 2 * np.pi, 100)
@@ -196,22 +199,24 @@ def plot_3d_foundation(params):
         Y1, Z1 = np.meshgrid(y1, z)
         X2, Z2 = np.meshgrid(x2, z)
         Y2, Z2 = np.meshgrid(y2, z)
-        fig.add_trace(go.Surface(x=np.concatenate([X1, X2]), y=np.concatenate([Y1, Y2]), z=Z1 + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
-        
-        # Adding edge lines
-        for t in theta:
-            fig.add_trace(go.Scatter3d(x=[r1 * np.cos(t), r2 * np.cos(t)], 
-                                       y=[r1 * np.sin(t), r2 * np.sin(t)], 
+        for i in range(len(z)):
+            fig.add_trace(go.Scatter3d(x=[x1[i], x2[i]], 
+                                       y=[y1[i], y2[i]], 
                                        z=[z_shift, height + z_shift], 
                                        mode='lines', 
                                        line=dict(color=edgecolor, width=2)))
-            fig.add_trace(go.Scatter3d(x=[r1 * np.cos(t), r1 * np.cos(t)], 
-                                       y=[r1 * np.sin(t), r1 * np.sin(t)], 
-                                       z=[z_shift, 0 + z_shift], 
+
+        fig.add_trace(go.Surface(x=np.concatenate([X1, X2]), y=np.concatenate([Y1, Y2]), z=Z1 + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+        
+        # Adding edge lines
+        for i in range(len(theta)):
+            fig.add_trace(go.Scatter3d(x=[x1[i], x1[i]], 
+                                       y=[y1[i], y1[i]], 
+                                       z=[z_shift, z_shift + height], 
                                        mode='lines', 
                                        line=dict(color=edgecolor, width=2)))
-            fig.add_trace(go.Scatter3d(x=[r2 * np.cos(t), r2 * np.cos(t)], 
-                                       y=[r2 * np.sin(t), r2 * np.sin(t)], 
+            fig.add_trace(go.Scatter3d(x=[x2[i], x2[i]], 
+                                       y=[y2[i], y2[i]], 
                                        z=[height + z_shift, height + z_shift], 
                                        mode='lines', 
                                        line=dict(color=edgecolor, width=2)))
@@ -219,7 +224,7 @@ def plot_3d_foundation(params):
     add_cylinder(d1 / 2, h1, 0, 'gray', 'black')
     add_conical_frustum(d1 / 2, d2 / 2, h2, h1, 'gray', 'black')
     add_cylinder(d2 / 2, h3, h1 + h2, 'gray', 'black', top=True)
-    add_conical_frustum(b1 / 2, b2 / 2, 0, -h5, 'gray', 'black')
+    add_conical_frustum(b1 / 2, b2 / 2, h4, h1 + h2 + h3 + h5, 'gray', 'black')
 
     total_height = h1 + h2 + h3 + h4 + h5
 
@@ -242,9 +247,12 @@ def plot_3d_foundation(params):
 
     return fig
 
-params = [10, 8, 2, 2, 1, 1, 1, 10, 8]
-fig = plot_3d_foundation(params)
-st.plotly_chart(fig)
+st.title('Wind Turbine Foundation Optimization')
+
+if st.button('Optimize'):
+    params = [10, 8, 2, 2, 1, 1, 1, 10, 8]  # Example parameters, replace with your calculated values
+    fig = plot_3d_foundation(params)
+    st.plotly_chart(fig)
 
 def plot_concrete_volume(volume_data):
     fig, ax = plt.subplots()
