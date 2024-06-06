@@ -90,8 +90,8 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
     p_min, p_max, B_wet, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:6]
 
     result = {
-        "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "C1", "C2", "C3", "C4", "Total weight", "p_min", "p_max", "B_wet", "B_dry", "W", "F_z", "net_load"],
-        "Value": [f"{val:.3f} m" for val in params] + [f"{C:.3f} m³" for C in [C1, C2, C3, C4]] + [f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{B_dry:.3f} kN", f"{W:.3f} kN", f"{F_z:.3f} kN", f"{net_load:.3f} kN"]
+        "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
+        "Value": [f"{val:.3f} m" for val in params], f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
     }
 
     concrete_volume = sum([C1, C2, C3, C4])
