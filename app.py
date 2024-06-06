@@ -91,7 +91,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
 
     result = {
         "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
-        "Value": [f"{val:.3f} m" for val in params], f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
+        "Value": [f"{val:.3f} m" for val in params] + [f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
     }
 
     concrete_volume = sum([C1, C2, C3, C4])
