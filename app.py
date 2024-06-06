@@ -163,6 +163,10 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
+import numpy as np
+import plotly.graph_objects as go
+import streamlit as st
+
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
@@ -247,9 +251,15 @@ def plot_3d_foundation(params):
 
     return fig
 
-st.title('Wind Turbine Foundation Optimization')
+# Placeholder for the boolean flag indicating if the optimization button was clicked
+optimize_clicked = st.session_state.get('optimize_clicked', False)
 
-if st.button('Optimize'):
+# Your existing code for the optimization button
+if st.button('Optimize Foundation'):
+    optimize_clicked = True
+    st.session_state['optimize_clicked'] = optimize_clicked
+
+if optimize_clicked:
     params = [10, 8, 2, 2, 1, 1, 1, 10, 8]  # Example parameters, replace with your calculated values
     fig = plot_3d_foundation(params)
     st.plotly_chart(fig)
