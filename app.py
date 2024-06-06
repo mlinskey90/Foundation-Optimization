@@ -172,9 +172,18 @@ def plot_3d_foundation(params):
         Xc, Zc = np.meshgrid(x, z)
         Yc, Zc = np.meshgrid(y, z)
         fig.add_trace(go.Surface(x=Xc, y=Yc, z=Zc + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
-        fig.add_trace(go.Scatter3d(x=np.ravel(Xc), y=np.ravel(Yc), z=np.ravel(Zc + z_shift), mode='lines', line=dict(color=edgecolor, width=2)))
+        
+        # Adding edge lines
+        for t in theta:
+            fig.add_trace(go.Scatter3d(x=[radius * np.cos(t), radius * np.cos(t)], 
+                                       y=[radius * np.sin(t), radius * np.sin(t)], 
+                                       z=[z_shift, height + z_shift], 
+                                       mode='lines', 
+                                       line=dict(color=edgecolor, width=2)))
+
         if top:
             fig.add_trace(go.Surface(x=Xc[:, :1], y=Yc[:, :1], z=Zc[:, :1] + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+            fig.add_trace(go.Scatter3d(x=x, y=y, z=[height + z_shift] * 100, mode='lines', line=dict(color=edgecolor, width=2)))
 
     def add_conical_frustum(r1, r2, height, z_shift, color, edgecolor):
         theta = np.linspace(0, 2 * np.pi, 100)
@@ -187,26 +196,30 @@ def plot_3d_foundation(params):
         Y1, Z1 = np.meshgrid(y1, z)
         X2, Z2 = np.meshgrid(x2, z)
         Y2, Z2 = np.meshgrid(y2, z)
-        for i in range(len(z)-1):
-            fig.add_trace(go.Mesh3d(
-                x=np.concatenate([X1[i], X1[i+1], X2[i+1], X2[i]]),
-                y=np.concatenate([Y1[i], Y1[i+1], Y2[i+1], Y2[i]]),
-                z=np.concatenate([Z1[i], Z1[i+1], Z2[i+1], Z2[i]]) + z_shift,
-                color=color,
-                opacity=1.0,
-                flatshading=True
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=np.concatenate([X1[i], X1[i+1], X2[i+1], X2[i]]),
-                y=np.concatenate([Y1[i], Y1[i+1], Y2[i+1], Y2[i]]),
-                z=np.concatenate([Z1[i], Z1[i+1], Z2[i+1], Z2[i]]) + z_shift,
-                mode='lines', line=dict(color=edgecolor, width=2)
-            ))
+        fig.add_trace(go.Surface(x=np.concatenate([X1, X2]), y=np.concatenate([Y1, Y2]), z=Z1 + z_shift, colorscale=[[0, color], [1, color]], showscale=False))
+        
+        # Adding edge lines
+        for t in theta:
+            fig.add_trace(go.Scatter3d(x=[r1 * np.cos(t), r2 * np.cos(t)], 
+                                       y=[r1 * np.sin(t), r2 * np.sin(t)], 
+                                       z=[z_shift, height + z_shift], 
+                                       mode='lines', 
+                                       line=dict(color=edgecolor, width=2)))
+            fig.add_trace(go.Scatter3d(x=[r1 * np.cos(t), r1 * np.cos(t)], 
+                                       y=[r1 * np.sin(t), r1 * np.sin(t)], 
+                                       z=[z_shift, 0 + z_shift], 
+                                       mode='lines', 
+                                       line=dict(color=edgecolor, width=2)))
+            fig.add_trace(go.Scatter3d(x=[r2 * np.cos(t), r2 * np.cos(t)], 
+                                       y=[r2 * np.sin(t), r2 * np.sin(t)], 
+                                       z=[height + z_shift, height + z_shift], 
+                                       mode='lines', 
+                                       line=dict(color=edgecolor, width=2)))
 
     add_cylinder(d1 / 2, h1, 0, 'gray', 'black')
     add_conical_frustum(d1 / 2, d2 / 2, h2, h1, 'gray', 'black')
     add_cylinder(d2 / 2, h3, h1 + h2, 'gray', 'black', top=True)
-    add_conical_frustum(b2 / 2, b1 / 2, -h5, 0, 'gray', 'black')
+    add_conical_frustum(b1 / 2, b2 / 2, 0, -h5, 'gray', 'black')
 
     total_height = h1 + h2 + h3 + h4 + h5
 
