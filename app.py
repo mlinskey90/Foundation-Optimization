@@ -370,6 +370,6 @@ if optimize_clicked:
         st.pyplot(fig_weight)
 
         # Display 3D plot
-        st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
+        st.plotly_chart(plot_3d_foundation(params), use_container_width=True)
     else:
         st.error(f"Optimization failed: {result_output['Value'][0]}")
