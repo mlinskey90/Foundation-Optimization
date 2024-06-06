@@ -194,13 +194,14 @@ def plot_3d_foundation(params):
     add_cylinder(d1 / 2, h1, 0, 'gray')
     add_conical_frustum(d1 / 2, d2 / 2, h2, h1, 'gray')
     add_cylinder(d2 / 2, h3, h1 + h2, 'gray', top=True)
-    add_conical_frustum(b1 / 2, b2 / 2, 0, -h5, 'gray')
+    add_conical_frustum(b1 / 2, b2 / 2, h5, -(h1 + h2 + h3 + h4), 'gray')
 
-    max_dimension = max(d1, d2, h1 + h2 + h3, h5)
+    total_height = h1 + h2 + h3 + h4 + h5
+
     fig.update_layout(scene=dict(
-        xaxis=dict(title='Width (m)', range=[-max_dimension/2, max_dimension/2]),
-        yaxis=dict(title='Length (m)', range=[-max_dimension/2, max_dimension/2]),
-        zaxis=dict(title='Height (m)', range=[-max_dimension, max_dimension]),
+        xaxis=dict(title='Width (m)', range=[-d1/2, d1/2]),
+        yaxis=dict(title='Length (m)', range=[-d1/2, d1/2]),
+        zaxis=dict(title='Height (m)', range=[-total_height, total_height]),
         aspectmode='data'
     ))
 
