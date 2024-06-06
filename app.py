@@ -95,7 +95,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
     }
 
     concrete_volume = sum([C1, C2, C3, C4])
-    return result, concrete_volume
+    return result, concrete_volume, B_dry
 
 def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
@@ -151,9 +151,9 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
 
         optimized_concrete_volume = sum([C1, C2, C3, C4])
         fig = plot_foundation_comparison(initial_params, params)
-        return result_output, optimized_concrete_volume, fig
+        return result_output, optimized_concrete_volume, B_dry, fig
     else:
-        return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None
+        return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None
 
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
@@ -272,8 +272,9 @@ if 'original_concrete_volume' not in st.session_state:
 
 st.header("Run Calculations")
 if st.button("Run Calculations"):
-    result_output, original_concrete_volume = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, rho_ballast_dry, initial_params)
+    result_output, original_concrete_volume, original_ballast = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
+    st.session_state['original_ballast'] = original_ballast
 
     result_df = pd.DataFrame(result_output)
     result_html = result_df.to_html(index=False)
@@ -283,13 +284,13 @@ if st.button("Run Calculations"):
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
-    result_output, optimized_concrete_volume, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, rho_ballast_dry, initial_params, h_anchor)
+    result_output, optimized_concrete_volume, optimized_ballast, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor)
 
     original_values = [f"{val:.3f} m" for val in initial_params]
 
     result_df = pd.DataFrame(result_output)
     result_df.columns = ["Parameter", "Optimized Value"]
-    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_df) - len(original_values)))
+    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_output["Parameter"]) - len(original_values)))
 
     result_html = result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
@@ -312,12 +313,10 @@ if st.button("Optimize Foundation"):
     # Additional Calculations for Steel and Ballast
     original_steel = 0.135 * st.session_state['original_concrete_volume']
     optimized_steel = 0.15 * optimized_concrete_volume
-    original_ballast = ((np.pi * d1**2 / 4) * (h2 + h3 - h4) - initial_params[1] - (np.pi * d2**2 / 4) * (h3 - h4)) * rho_ballast_dry
-    optimized_ballast = ((np.pi * initial_params[0]**2 / 4) * (optimized_params[1] + optimized_params[2] - initial_params[4]) - initial_params[1] - (np.pi * initial_params[1]**2 / 4) * (optimized_params[2] - initial_params[4])) * rho_ballast_dry
 
     weight_data = pd.DataFrame({
         'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
-        'Weight (t)': [original_steel, optimized_steel, original_ballast, optimized_ballast]
+        'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'], optimized_ballast]
     })
 
     fig_weight = plot_steel_and_ballast(weight_data)
