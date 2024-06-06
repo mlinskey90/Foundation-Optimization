@@ -178,9 +178,9 @@ def plot_3d_foundation(params):
     def add_conical_frustum(r1, r2, height, z_shift, color):
         theta = np.linspace(0, 2 * np.pi, 100)
         x1 = r1 * np.cos(theta)
-        y1 = r1 * sin(theta)
+        y1 = r1 * np.sin(theta)
         x2 = r2 * np.cos(theta)
-        y2 = r2 * sin(theta)
+        y2 = r2 * np.sin(theta)
         z = np.linspace(0, height, 2)
         X1, Z1 = np.meshgrid(x1, z)
         Y1, Z1 = np.meshgrid(y1, z)
