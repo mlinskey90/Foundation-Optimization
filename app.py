@@ -214,12 +214,18 @@ def plot_3d_foundation(params):
         xaxis=dict(title='Width (m)', range=[-d1/2, d1/2], backgroundcolor="brown", gridcolor="white"),
         yaxis=dict(title='Length (m)', range=[-d1/2, d1/2], backgroundcolor="brown", gridcolor="white"),
         zaxis=dict(title='Height (m)', range=[-h5, h1 + h2 + h3 + h4], gridcolor="white"),
-        bgcolor='skyblue'
+        bgcolor='skyblue',
+        aspectmode='manual',
+        aspectratio=dict(x=1, y=1, z=1)
     ))
 
     fig.update_layout(title="Optimized Foundation Geometry")
 
     return fig
+
+params = [10, 8, 2, 2, 1, 1, 1, 10, 8]
+fig = plot_3d_foundation(params)
+st.plotly_chart(fig)
 
 def plot_concrete_volume(volume_data):
     fig, ax = plt.subplots()
