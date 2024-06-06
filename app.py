@@ -210,13 +210,19 @@ def plot_3d_foundation(params):
 
     total_height = h1 + h2 + h3 + h4 + h5
 
+    aspect_ratio = {
+        'x': d1 / total_height,
+        'y': d1 / total_height,
+        'z': 1
+    }
+
     fig.update_layout(scene=dict(
         xaxis=dict(title='Width (m)', range=[-d1/2, d1/2], backgroundcolor="brown", gridcolor="white"),
         yaxis=dict(title='Length (m)', range=[-d1/2, d1/2], backgroundcolor="brown", gridcolor="white"),
         zaxis=dict(title='Height (m)', range=[-h5, h1 + h2 + h3 + h4], gridcolor="white"),
         bgcolor='skyblue',
         aspectmode='manual',
-        aspectratio=dict(x=1, y=1, z=1)
+        aspectratio=aspect_ratio
     ))
 
     fig.update_layout(title="Optimized Foundation Geometry")
