@@ -144,7 +144,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
         p_min, p_max, B_wet, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:6]
 
-        result = {
+        result_output = {
             "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
             "Value": [f"{val:.3f} m" for val in params] + [f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
         }
@@ -293,38 +293,41 @@ st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, optimized_ballast, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor)
 
-    original_values = [f"{val:.3f} m" for val in initial_params]
+    if result_output["Parameter"][0] != "Error":
+        original_values = [f"{val:.3f} m" for val in initial_params]
 
-    result_df = pd.DataFrame(result_output)
-    result_df.columns = ["Parameter", "Optimized Value"]
-    result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_output["Parameter"]) - len(original_values)))
+        result_df = pd.DataFrame(result_output)
+        result_df.columns = ["Parameter", "Optimized Value"]
+        result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_output["Parameter"]) - len(original_values)))
 
-    result_html = result_df.to_html(index=False)
-    st.markdown(result_html, unsafe_allow_html=True)
+        result_html = result_df.to_html(index=False)
+        st.markdown(result_html, unsafe_allow_html=True)
 
-    st.subheader("Concrete Volume Comparison")
-    if st.session_state['original_concrete_volume'] is not None:
-        st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
-    st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
-    if st.session_state['original_concrete_volume'] is not None:
-        volume_data = pd.DataFrame({
-            'Volume': ['Original', 'Optimized'],
-            'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
+        st.subheader("Concrete Volume Comparison")
+        if st.session_state['original_concrete_volume'] is not None:
+            st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
+        st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
+        if st.session_state['original_concrete_volume'] is not None:
+            volume_data = pd.DataFrame({
+                'Volume': ['Original', 'Optimized'],
+                'Concrete Volume (m³)': [st.session_state['original_concrete_volume'], optimized_concrete_volume]
+            })
+            fig_volume = plot_concrete_volume(volume_data)
+            st.pyplot(fig_volume)
+
+        st.pyplot(fig)
+        st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
+
+        # Additional Calculations for Steel and Ballast
+        original_steel = 0.135 * st.session_state['original_concrete_volume']
+        optimized_steel = 0.15 * optimized_concrete_volume
+
+        weight_data = pd.DataFrame({
+            'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
+            'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'], optimized_ballast]
         })
-        fig_volume = plot_concrete_volume(volume_data)
-        st.pyplot(fig_volume)
 
-    st.pyplot(fig)
-    st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
-
-    # Additional Calculations for Steel and Ballast
-    original_steel = 0.135 * st.session_state['original_concrete_volume']
-    optimized_steel = 0.15 * optimized_concrete_volume
-
-    weight_data = pd.DataFrame({
-        'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
-        'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'], optimized_ballast]
-    })
-
-    fig_weight = plot_steel_and_ballast(weight_data)
-    st.pyplot(fig_weight)
+        fig_weight = plot_steel_and_ballast(weight_data)
+        st.pyplot(fig_weight)
+    else:
+        st.error(f"Optimization failed: {result_output['Value'][0]}")
