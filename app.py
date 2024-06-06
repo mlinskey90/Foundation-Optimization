@@ -122,11 +122,17 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
         return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
+    
+    def constraint_h1_h2_ratio(x):
+        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        h1, h2, h3 = params[2], params[3], params[4]
+        return h1 + h2 - 0.6 * (h1 + h2 + h3)
 
     cons = [{'type': 'ineq', 'fun': constraint_pmin},
             {'type': 'ineq', 'fun': constraint_theta},
             {'type': 'ineq', 'fun': constraint_h3},
-            {'type': 'ineq', 'fun': constraint_anchor}]
+            {'type': 'ineq', 'fun': constraint_anchor},
+            {'type': 'ineq', 'fun': constraint_h1_h2_ratio}]
 
     result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
                       bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
