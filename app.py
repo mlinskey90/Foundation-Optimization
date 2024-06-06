@@ -251,7 +251,6 @@ q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f"
 rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
 rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
 rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
-rho_water = st.sidebar.number_input(r'$\rho_{water}$ (kN/m³)', value=9.81, format="%.3f")
 
 st.sidebar.subheader("Dimensions")
 d1 = st.sidebar.number_input('d1 (m)', value=21.600, format="%.3f")
@@ -266,6 +265,9 @@ b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f")
 h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
+
+# Define rho_water in the code
+rho_water = -9.81
 
 # Initialize session state for original concrete volume
 if 'original_concrete_volume' not in st.session_state:
