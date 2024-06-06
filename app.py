@@ -159,14 +159,6 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         }
         return result_output, None, None, None
 
-import numpy as np
-import plotly.graph_objects as go
-import streamlit as st
-
-import numpy as np
-import plotly.graph_objects as go
-import streamlit as st
-
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
 
@@ -251,19 +243,6 @@ def plot_3d_foundation(params):
 
     return fig
 
-# Placeholder for the boolean flag indicating if the optimization button was clicked
-optimize_clicked = st.session_state.get('optimize_clicked', False)
-
-# Your existing code for the optimization button
-if st.button('Optimize Foundation'):
-    optimize_clicked = True
-    st.session_state['optimize_clicked'] = optimize_clicked
-
-if optimize_clicked:
-    params = [10, 8, 2, 2, 1, 1, 1, 10, 8]  # Example parameters, replace with your calculated values
-    fig = plot_3d_foundation(params)
-    st.plotly_chart(fig)
-
 def plot_concrete_volume(volume_data):
     fig, ax = plt.subplots()
     bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
@@ -330,8 +309,11 @@ if 'original_concrete_volume' not in st.session_state:
 if 'original_ballast' not in st.session_state:
     st.session_state['original_ballast'] = None
 
+# Placeholder for the boolean flag indicating if the optimization button was clicked
+optimize_clicked = st.session_state.get('optimize_clicked', False)
+
 st.header("Run Calculations")
-if st.button("Run Calculations"):
+if st.button("Run Calculations", key="run_calculations_button"):
     result_output, original_concrete_volume, B_dry_original = run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params)
     st.session_state['original_concrete_volume'] = original_concrete_volume
     st.session_state['original_ballast'] = B_dry_original
@@ -343,7 +325,11 @@ if st.button("Run Calculations"):
     st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
 
 st.header("Optimize Foundation")
-if st.button("Optimize Foundation"):
+if st.button("Optimize Foundation", key="optimize_foundation_button"):
+    optimize_clicked = True
+    st.session_state['optimize_clicked'] = optimize_clicked
+
+if optimize_clicked:
     result_output, optimized_concrete_volume, B_dry_optimal, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor)
 
     if result_output["Parameter"][0] != "Error":
@@ -387,15 +373,3 @@ if st.button("Optimize Foundation"):
         st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
     else:
         st.error(f"Optimization failed: {result_output['Value'][0]}")
-
-        # Additional Calculations for Steel and Ballast
-        original_steel = 0.135 * st.session_state['original_concrete_volume']
-        optimized_steel = 0.135 * optimized_concrete_volume
-
-        weight_data = pd.DataFrame({
-            'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
-            'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'] * 0.1, B_dry_optimal * 0.1]
-        })
-
-        fig_weight = plot_steel_and_ballast(weight_data)
-        st.pyplot(fig_weight)
