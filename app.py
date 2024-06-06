@@ -206,7 +206,7 @@ def plot_3d_foundation(params):
     fig.update_layout(scene=dict(
         xaxis=dict(title='Width (m)', range=[-d1/2, d1/2]),
         yaxis=dict(title='Length (m)', range=[-d1/2, d1/2]),
-        zaxis=dict(title='Height (m)', range=[-total_height, total_height]),
+        zaxis=dict(title='Height (m)', range=[-h5, h1 + h2 + h3 + h4]),
         aspectmode='data'
     ))
 
