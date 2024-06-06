@@ -323,7 +323,7 @@ if st.button("Optimize Foundation"):
 
         # Additional Calculations for Steel and Ballast
         original_steel = 0.135 * st.session_state['original_concrete_volume']
-        optimized_steel = 0.15 * optimized_concrete_volume
+        optimized_steel = 0.135 * optimized_concrete_volume
 
         weight_data = pd.DataFrame({
             'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
