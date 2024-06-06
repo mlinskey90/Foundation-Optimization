@@ -144,16 +144,20 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
         p_min, p_max, B_wet, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:6]
 
-        result = {
-            "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
-            "Value": [f"{val:.3f} m" for val in params] + [f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
+        result_output = {
+            "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "Total weight", "p_min", "p_max", "B_wet", "B_dry", "W", "F_z", "net_load"],
+            "Value": [f"{val:.3f} m" for val in params] + [f"{total_weight:.3f} kN", f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²", f"{B_wet:.3f} kN", f"{B_dry:.3f} kN", f"{W:.3f} kN", f"{F_z:.3f} kN", f"{net_load:.3f} kN"]
         }
 
         optimized_concrete_volume = sum([C1, C2, C3, C4])
         fig = plot_foundation_comparison(initial_params, params)
         return result_output, optimized_concrete_volume, B_dry, fig
     else:
-        return {"Parameter": [], "Value": [f"Optimization failed: {result.message}"]}, None, None, None
+        result_output = {
+            "Parameter": ["Error"],
+            "Value": [f"Optimization failed: {result.message}"]
+        }
+        return result_output, None, None, None
 
 def plot_3d_foundation(params):
     d1, d2, h1, h2, h3, h4, h5, b1, b2 = params
@@ -174,9 +178,9 @@ def plot_3d_foundation(params):
     def add_conical_frustum(r1, r2, height, z_shift, color):
         theta = np.linspace(0, 2 * np.pi, 100)
         x1 = r1 * np.cos(theta)
-        y1 = r1 * np.sin(theta)
+        y1 = r1 * sin(theta)
         x2 = r2 * np.cos(theta)
-        y2 = r2 * np.sin(theta)
+        y2 = r2 * sin(theta)
         z = np.linspace(0, height, 2)
         X1, Z1 = np.meshgrid(x1, z)
         Y1, Z1 = np.meshgrid(y1, z)
