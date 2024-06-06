@@ -349,5 +349,3 @@ if st.button("Optimize Foundation"):
 
         fig_weight = plot_steel_and_ballast(weight_data)
         st.pyplot(fig_weight)
-    else:
-        st.error(f"Optimization failed: {result_output['Value'][0]}")
