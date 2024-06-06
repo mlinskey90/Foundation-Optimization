@@ -221,10 +221,6 @@ def plot_3d_foundation(params):
 
     return fig
 
-params = [10, 8, 2, 2, 1, 1, 1, 10, 8]
-fig = plot_3d_foundation(params)
-st.plotly_chart(fig)
-
 def plot_concrete_volume(volume_data):
     fig, ax = plt.subplots()
     bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
