@@ -306,6 +306,9 @@ if st.button("Optimize Foundation"):
         result_html = result_df.to_html(index=False)
         st.markdown(result_html, unsafe_allow_html=True)
 
+        # Display 2D plot comparison
+        st.pyplot(fig)
+
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
             st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
@@ -318,8 +321,22 @@ if st.button("Optimize Foundation"):
             fig_volume = plot_concrete_volume(volume_data)
             st.pyplot(fig_volume)
 
-        st.pyplot(fig)
+        # Additional Calculations for Steel and Ballast
+        original_steel = 0.135 * st.session_state['original_concrete_volume']
+        optimized_steel = 0.135 * optimized_concrete_volume
+
+        weight_data = pd.DataFrame({
+            'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
+            'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'] * 0.1, B_dry_optimal * 0.1]
+        })
+
+        fig_weight = plot_steel_and_ballast(weight_data)
+        st.pyplot(fig_weight)
+
+        # Display 3D plot
         st.plotly_chart(plot_3d_foundation(initial_params), use_container_width=True)
+    else:
+        st.error(f"Optimization failed: {result_output['Value'][0]}")
 
         # Additional Calculations for Steel and Ballast
         original_steel = 0.135 * st.session_state['original_concrete_volume']
