@@ -206,7 +206,7 @@ def plot_3d_foundation(params):
     add_cylinder(d1 / 2, h1, 0, 'gray', 'black')
     add_conical_frustum(d1 / 2, d2 / 2, h2, h1, 'gray', 'black')
     add_cylinder(d2 / 2, h3, h1 + h2, 'gray', 'black', top=True)
-    add_conical_frustum(b1 / 2, b2 / 2, 0, -h5, 'gray', 'black')
+    add_conical_frustum(b2 / 2, b1 / 2, -h5, 0, 'gray', 'black')
 
     total_height = h1 + h2 + h3 + h4 + h5
 
