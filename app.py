@@ -327,7 +327,7 @@ if st.button("Optimize Foundation"):
 
         weight_data = pd.DataFrame({
             'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
-            'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'], B_dry_optimal]
+            'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'] * 0.1, B_dry_optimal * 0.1]
         })
 
         fig_weight = plot_steel_and_ballast(weight_data)
