@@ -91,7 +91,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
 
     result = {
         "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
-        "Value": [f"{val:.3f} m" for val in params] + [f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
+        "Value": [f"{int(val)} m" for val in params] + [f"{int(p_min)} kN/m²", f"{int(p_max)} kN/m²"]
     }
 
     concrete_volume = sum([C1, C2, C3, C4])
@@ -146,7 +146,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
 
         result_output = {
             "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
-            "Value": [f"{val:.3f} m" for val in params] + [f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
+            "Value": [f"{int(val)} m" for val in params] + [f"{int(p_min)} kN/m²", f"{int(p_max)} kN/m²"]
         }
 
         optimized_concrete_volume = sum([C1, C2, C3, C4])
@@ -217,7 +217,7 @@ def plot_3d_foundation(params):
 def plot_concrete_volume(volume_data):
     fig, ax = plt.subplots()
     bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-    for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
+    for bar, label in zip(bars, [f"{int(v)} m³" for v in volume_data['Concrete Volume (m³)']]):
         width = bar.get_width()
         ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
     plt.xlabel('Concrete Volume (m³)')
@@ -227,7 +227,7 @@ def plot_concrete_volume(volume_data):
 def plot_steel_and_ballast(data):
     fig, ax = plt.subplots()
     bars = ax.bar(data['Category'], data['Weight (t)'], color=['blue', 'blue', 'orange', 'orange'])
-    for bar, label in zip(bars, [f"{v:.3f} t" for v in data['Weight (t)']]):
+    for bar, label in zip(bars, [f"{int(v)} t" for v in data['Weight (t)']]):
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width() / 2, height / 2, label, ha='center', va='center', color='black')
     plt.xlabel('Category')
@@ -245,28 +245,28 @@ st.image(image_path, caption="Foundation Diagram", use_column_width=True)
 # Sidebar Inputs
 st.sidebar.header("Input Parameters")
 st.sidebar.subheader("Load Cases")
-F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300.000, format="%.3f")
-F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=511.900, format="%.3f")
-M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264.200, format="%.3f")
-M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080, format="%.3f")
+F_z = st.sidebar.number_input(r'$F_z$ (kN)', value=3300, format="%.0f")
+F_RES = st.sidebar.number_input(r'$F_{RES}$ (kN)', value=512, format="%.0f")
+M_z = st.sidebar.number_input(r'$M_z$ (kNm)', value=2264, format="%.0f")
+M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122, format="%.0f")
 
 st.sidebar.subheader("Material Properties")
-q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f")
-rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
-rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
-rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
+q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200, format="%.0f")
+rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24, format="%.0f")
+rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20, format="%.0f")
+rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18, format="%.0f")
 
 st.sidebar.subheader("Dimensions")
-d1 = st.sidebar.number_input('d1 (m)', value=21.600, format="%.3f")
-d2 = st.sidebar.number_input('d2 (m)', value=6.000, format="%.3f")
-h1 = st.sidebar.number_input('h1 (m)', value=0.500, format="%.3f")
-h2 = st.sidebar.number_input('h2 (m)', value=1.400, format="%.3f")
-h3 = st.sidebar.number_input('h3 (m)', value=0.795, format="%.3f")
-h4 = st.sidebar.number_input('h4 (m)', value=0.100, format="%.3f")
-h5 = st.sidebar.number_input('h5 (m)', value=0.250, format="%.3f")
-b1 = st.sidebar.number_input('b1 (m)', value=6.000, format="%.3f")
-b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f")
-h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
+d1 = st.sidebar.number_input('d1 (m)', value=22, format="%.0f")
+d2 = st.sidebar.number_input('d2 (m)', value=6, format="%.0f")
+h1 = st.sidebar.number_input('h1 (m)', value=1, format="%.0f")
+h2 = st.sidebar.number_input('h2 (m)', value=2, format="%.0f")
+h3 = st.sidebar.number_input('h3 (m)', value=1, format="%.0f")
+h4 = st.sidebar.number_input('h4 (m)', value=0, format="%.0f")
+h5 = st.sidebar.number_input('h5 (m)', value=0, format="%.0f")
+b1 = st.sidebar.number_input('b1 (m)', value=6, format="%.0f")
+b2 = st.sidebar.number_input('b2 (m)', value=6, format="%.0f")
+h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=3, format="%.0f")
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
 
@@ -290,14 +290,14 @@ if st.button("Run Calculations"):
     result_html = result_df.to_html(index=False)
     st.markdown(result_html, unsafe_allow_html=True)
     st.subheader("Concrete Volume")
-    st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
+    st.write(f"Original Concrete Volume: {int(original_concrete_volume)} m³")
 
 st.header("Optimize Foundation")
 if st.button("Optimize Foundation"):
     result_output, optimized_concrete_volume, B_dry_optimal, fig = optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor)
 
     if result_output["Parameter"][0] != "Error":
-        original_values = [f"{val:.3f} m" for val in initial_params]
+        original_values = [f"{int(val)} m" for val in initial_params]
 
         result_df = pd.DataFrame(result_output)
         result_df.columns = ["Parameter", "Optimized Value"]
@@ -311,8 +311,8 @@ if st.button("Optimize Foundation"):
 
         st.subheader("Concrete Volume Comparison")
         if st.session_state['original_concrete_volume'] is not None:
-            st.write(f"Original Concrete Volume: {st.session_state['original_concrete_volume']:.3f} m³")
-        st.write(f"Optimized Concrete Volume: {optimized_concrete_volume:.3f} m³")
+            st.write(f"Original Concrete Volume: {int(st.session_state['original_concrete_volume'])} m³")
+        st.write(f"Optimized Concrete Volume: {int(optimized_concrete_volume)} m³")
         if st.session_state['original_concrete_volume'] is not None:
             volume_data = pd.DataFrame({
                 'Volume': ['Original', 'Optimized'],
