@@ -185,6 +185,27 @@ def plot_cost_comparison(original_cost, optimized_cost):
     ax.set_title('Foundation Cost Comparison')
     return fig
 
+def plot_concrete_volume(volume_data):
+    fig, ax = plt.subplots()
+    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
+    for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
+        width = bar.get_width()
+        ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
+    plt.xlabel('Concrete Volume (m³)')
+    plt.title('Concrete Volume Comparison')
+    return fig
+
+def plot_steel_and_ballast(data):
+    fig, ax = plt.subplots()
+    bars = ax.bar(data['Category'], data['Weight (t)'], color=['blue', 'blue', 'orange', 'orange'])
+    for bar, label in zip(bars, [f"{v:.3f} t" for v in data['Weight (t)']]):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, height / 2, label, ha='center', va='center', color='black')
+    plt.xlabel('Category')
+    plt.ylabel('Weight (t)')
+    plt.title('Steel and Ballast Weight Comparison')
+    return fig
+
 # Streamlit Interface
 st.title("Foundation Optimization")
 
