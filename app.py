@@ -99,7 +99,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
 def calculate_costs(concrete_volume, steel_weight, ballast_weight, cost_concrete=120, cost_steel=600, cost_ballast=15):
     concrete_cost = concrete_volume * cost_concrete
     steel_cost = steel_weight * cost_steel
-    ballast_cost = ballast_weight * cost_ballast
+    ballast_cost = ballast_weight * cost_ballast/10
     total_cost = concrete_cost + steel_cost + ballast_cost
     return concrete_cost, steel_cost, ballast_cost, total_cost
 
