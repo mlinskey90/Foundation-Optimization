@@ -96,12 +96,25 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
     concrete_volume = sum([C1, C2, C3, C4])
     return result, concrete_volume, B_dry
 
-def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor):
+def calculate_costs(concrete_volume, steel_weight, ballast_weight, cost_concrete=120, cost_steel=600, cost_ballast=15):
+    concrete_cost = concrete_volume * cost_concrete
+    steel_cost = steel_weight * cost_steel
+    ballast_cost = ballast_weight * cost_ballast
+    total_cost = concrete_cost + steel_cost + ballast_cost
+    return concrete_cost, steel_cost, ballast_cost, total_cost
+
+def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor, cost_weight=0.5):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
 
     def objective(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        return calculate_weights(params, rho_conc)[0]
+        total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
+        concrete_volume = sum([C1, C2, C3, C4])
+        steel_weight = 0.135 * concrete_volume
+        ballast_weight = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_ballast_dry)[1]
+        _, _, _, total_cost = calculate_costs(concrete_volume, steel_weight, ballast_weight)
+        # Combine total weight and total cost into a single objective
+        return (1 - cost_weight) * total_weight + cost_weight * total_cost
 
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
@@ -178,13 +191,6 @@ def plot_steel_and_ballast(data):
     plt.ylabel('Weight (t)')
     plt.title('Steel and Ballast Weight Comparison')
     return fig
-
-def calculate_costs(concrete_volume, steel_weight, ballast_weight, cost_concrete=120, cost_steel=600, cost_ballast=15):
-    concrete_cost = concrete_volume * cost_concrete
-    steel_cost = steel_weight * cost_steel
-    ballast_cost = ballast_weight * cost_ballast
-    total_cost = concrete_cost + steel_cost + ballast_cost
-    return concrete_cost, steel_cost, ballast_cost, total_cost
 
 def plot_cost_comparison(cost_data):
     fig, ax = plt.subplots()
