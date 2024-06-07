@@ -194,13 +194,25 @@ def plot_steel_and_ballast(data):
 
 def plot_cost_comparison(cost_data):
     fig, ax = plt.subplots()
-    bars = ax.bar(cost_data['Category'], cost_data['Cost (£)'], color=['purple', 'purple'])
-    for bar, label in zip(bars, [f"£{v:.2f}" for v in cost_data['Cost (£)']]):
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2, height / 2, label, ha='center', va='center', color='white')
-    plt.xlabel('Category')
+    categories = cost_data['Category']
+    concrete_costs = cost_data['Concrete Cost (£)']
+    steel_costs = cost_data['Steel Cost (£)']
+    ballast_costs = cost_data['Ballast Cost (£)']
+    total_costs = cost_data['Total Cost (£)']
+
+    bar_width = 0.35
+    r1 = np.arange(len(categories))
+    r2 = [x + bar_width for x in r1]
+
+    plt.bar(r1, concrete_costs, color='grey', width=bar_width, label='Concrete Cost')
+    plt.bar(r1, steel_costs, bottom=concrete_costs, color='blue', width=bar_width, label='Steel Cost')
+    plt.bar(r1, ballast_costs, bottom=[i+j for i,j in zip(concrete_costs, steel_costs)], color='orange', width=bar_width, label='Ballast Cost')
+    
+    plt.xlabel('Category', fontweight='bold')
+    plt.xticks([r + bar_width/2 for r in range(len(categories))], categories)
     plt.ylabel('Cost (£)')
     plt.title('Foundation Cost Comparison')
+    plt.legend()
     return fig
 
 # Streamlit Interface
@@ -317,8 +329,11 @@ if optimize_clicked:
         )
 
         cost_data = pd.DataFrame({
-            'Category': ['Original Total Cost', 'Optimized Total Cost'],
-            'Cost (£)': [original_total_cost, optimized_total_cost]
+            'Category': ['Original', 'Optimized'],
+            'Concrete Cost (£)': [original_concrete_cost, optimized_concrete_cost],
+            'Steel Cost (£)': [original_steel_cost, optimized_steel_cost],
+            'Ballast Cost (£)': [original_ballast_cost, optimized_ballast_cost],
+            'Total Cost (£)': [original_total_cost, optimized_total_cost]
         })
 
         fig_cost = plot_cost_comparison(cost_data)
