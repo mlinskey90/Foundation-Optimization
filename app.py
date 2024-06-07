@@ -165,7 +165,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         }
         return result_output, None, None, None
 
-def plot_cost_comparison(original_cost, optimized_cost):
+def plot_cost_comparison(original_cost, optimized_cost, original_breakdown, optimized_breakdown):
     fig, ax = plt.subplots(figsize=(10, 7))
     categories = ['Original', 'Optimized']
     total_costs = [original_cost, optimized_cost]
@@ -183,6 +183,21 @@ def plot_cost_comparison(original_cost, optimized_cost):
     ax.set_xticklabels(categories)
     ax.set_ylabel('Cost (£)')
     ax.set_title('Foundation Cost Comparison')
+
+    # Add detailed cost breakdown as text below the plot
+    detailed_text = (
+        f"Original Breakdown:\n"
+        f"Concrete Cost: £{original_breakdown[0]:,.2f}\n"
+        f"Steel Cost: £{original_breakdown[1]:,.2f}\n"
+        f"Ballast Cost: £{original_breakdown[2]:,.2f}\n\n"
+        f"Optimized Breakdown:\n"
+        f"Concrete Cost: £{optimized_breakdown[0]:,.2f}\n"
+        f"Steel Cost: £{optimized_breakdown[1]:,.2f}\n"
+        f"Ballast Cost: £{optimized_breakdown[2]:,.2f}"
+    )
+    plt.figtext(0.5, -0.2, detailed_text, ha='center', va='top', fontsize=10)
+    plt.subplots_adjust(bottom=0.4)
+
     return fig
 
 def plot_concrete_volume(volume_data):
@@ -319,8 +334,25 @@ if optimize_clicked:
             optimized_concrete_volume, optimized_steel, B_dry_optimal
         )
 
+        # Display individual costs for debugging
+        st.write("Original Costs:")
+        st.write(f"Concrete: £{original_concrete_cost:,.2f}")
+        st.write(f"Steel: £{original_steel_cost:,.2f}")
+        st.write(f"Ballast: £{original_ballast_cost:,.2f}")
+        st.write(f"Total: £{original_total_cost:,.2f}")
+
+        st.write("Optimized Costs:")
+        st.write(f"Concrete: £{optimized_concrete_cost:,.2f}")
+        st.write(f"Steel: £{optimized_steel_cost:,.2f}")
+        st.write(f"Ballast: £{optimized_ballast_cost:,.2f}")
+        st.write(f"Total: £{optimized_total_cost:,.2f}")
+
         # Plot cost comparison
-        fig_cost = plot_cost_comparison(original_total_cost, optimized_total_cost)
+        fig_cost = plot_cost_comparison(
+            original_total_cost, optimized_total_cost,
+            (original_concrete_cost, original_steel_cost, original_ballast_cost),
+            (optimized_concrete_cost, optimized_steel_cost, optimized_ballast_cost)
+        )
         st.pyplot(fig_cost)
 
     else:
