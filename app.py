@@ -193,7 +193,7 @@ def plot_steel_and_ballast(data):
     return fig
 
 def plot_cost_comparison(cost_data):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 7))
     categories = cost_data['Category']
     concrete_costs = cost_data['Concrete Cost (£)']
     steel_costs = cost_data['Steel Cost (£)']
@@ -204,15 +204,20 @@ def plot_cost_comparison(cost_data):
     r1 = np.arange(len(categories))
     r2 = [x + bar_width for x in r1]
 
-    plt.bar(r1, concrete_costs, color='grey', width=bar_width, label='Concrete Cost')
-    plt.bar(r1, steel_costs, bottom=concrete_costs, color='blue', width=bar_width, label='Steel Cost')
-    plt.bar(r1, ballast_costs, bottom=[i+j for i,j in zip(concrete_costs, steel_costs)], color='orange', width=bar_width, label='Ballast Cost')
-    
-    plt.xlabel('Category', fontweight='bold')
-    plt.xticks([r + bar_width/2 for r in range(len(categories))], categories)
-    plt.ylabel('Cost (£)')
-    plt.title('Foundation Cost Comparison')
-    plt.legend()
+    ax.bar(r1, concrete_costs, color='grey', width=bar_width, label='Concrete Cost')
+    ax.bar(r1, steel_costs, bottom=concrete_costs, color='blue', width=bar_width, label='Steel Cost')
+    ax.bar(r1, ballast_costs, bottom=[i+j for i,j in zip(concrete_costs, steel_costs)], color='orange', width=bar_width, label='Ballast Cost')
+    ax.bar(r2, total_costs, color='purple', width=bar_width, label='Total Cost')
+
+    for i in range(len(r2)):
+        ax.text(r2[i], total_costs[i], f"£{total_costs[i]:.2f}", ha='center', va='bottom', color='white')
+
+    ax.set_xlabel('Category', fontweight='bold')
+    ax.set_xticks([r + bar_width/2 for r in range(len(categories))])
+    ax.set_xticklabels(categories)
+    ax.set_ylabel('Cost (£)')
+    ax.set_title('Foundation Cost Comparison')
+    ax.legend()
     return fig
 
 # Streamlit Interface
