@@ -1,9 +1,8 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
-from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+from scipy.optimize import minimize
 
 # Function definitions with docstrings
 def calculate_volumes(params):
@@ -284,8 +283,5 @@ if optimize_clicked:
 
         fig_weight = plot_steel_and_ballast(weight_data)
         st.pyplot(fig_weight)
-
-        # Display 3D plot
-        st.plotly_chart(plot_3d_foundation(params), use_container_width=True)
     else:
         st.error(f"Optimization failed: {result_output['Value'][0]}")
