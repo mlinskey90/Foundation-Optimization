@@ -179,6 +179,24 @@ def plot_steel_and_ballast(data):
     plt.title('Steel and Ballast Weight Comparison')
     return fig
 
+def calculate_costs(concrete_volume, steel_weight, ballast_weight, cost_concrete=120, cost_steel=600, cost_ballast=15):
+    concrete_cost = concrete_volume * cost_concrete
+    steel_cost = steel_weight * cost_steel
+    ballast_cost = ballast_weight * cost_ballast
+    total_cost = concrete_cost + steel_cost + ballast_cost
+    return concrete_cost, steel_cost, ballast_cost, total_cost
+
+def plot_cost_comparison(cost_data):
+    fig, ax = plt.subplots()
+    bars = ax.bar(cost_data['Category'], cost_data['Cost (£)'], color=['purple', 'purple'])
+    for bar, label in zip(bars, [f"£{v:.2f}" for v in cost_data['Cost (£)']]):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, height / 2, label, ha='center', va='center', color='white')
+    plt.xlabel('Category')
+    plt.ylabel('Cost (£)')
+    plt.title('Foundation Cost Comparison')
+    return fig
+
 # Streamlit Interface
 st.title("Foundation Optimization")
 
@@ -283,5 +301,22 @@ if optimize_clicked:
 
         fig_weight = plot_steel_and_ballast(weight_data)
         st.pyplot(fig_weight)
+
+        # Calculate and plot the cost comparison
+        original_concrete_cost, original_steel_cost, original_ballast_cost, original_total_cost = calculate_costs(
+            st.session_state['original_concrete_volume'], original_steel, st.session_state['original_ballast']
+        )
+        optimized_concrete_cost, optimized_steel_cost, optimized_ballast_cost, optimized_total_cost = calculate_costs(
+            optimized_concrete_volume, optimized_steel, B_dry_optimal
+        )
+
+        cost_data = pd.DataFrame({
+            'Category': ['Original Total Cost', 'Optimized Total Cost'],
+            'Cost (£)': [original_total_cost, optimized_total_cost]
+        })
+
+        fig_cost = plot_cost_comparison(cost_data)
+        st.pyplot(fig_cost)
+
     else:
         st.error(f"Optimization failed: {result_output['Value'][0]}")
