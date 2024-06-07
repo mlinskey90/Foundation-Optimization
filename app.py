@@ -103,18 +103,12 @@ def calculate_costs(concrete_volume, steel_weight, ballast_weight, cost_concrete
     total_cost = concrete_cost + steel_cost + ballast_cost
     return concrete_cost, steel_cost, ballast_cost, total_cost
 
-def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor, cost_weight=0.5):
+def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, initial_params, h_anchor):
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
 
     def objective(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
-        concrete_volume = sum([C1, C2, C3, C4])
-        steel_weight = 0.135 * concrete_volume
-        ballast_weight = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_ballast_dry)[1]
-        _, _, _, total_cost = calculate_costs(concrete_volume, steel_weight, ballast_weight)
-        # Combine total weight and total cost into a single objective
-        return (1 - cost_weight) * total_weight + cost_weight * total_cost
+        return calculate_weights(params, rho_conc)[0]
 
     def constraint_pmin(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
@@ -171,53 +165,24 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         }
         return result_output, None, None, None
 
-def plot_concrete_volume(volume_data):
-    fig, ax = plt.subplots()
-    bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
-    for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
-        width = bar.get_width()
-        ax.text(width / 2, bar.get_y() + bar.get_height() / 2, label, ha='center', va='center', color='black')
-    plt.xlabel('Concrete Volume (m³)')
-    plt.title('Concrete Volume Comparison')
-    return fig
-
-def plot_steel_and_ballast(data):
-    fig, ax = plt.subplots()
-    bars = ax.bar(data['Category'], data['Weight (t)'], color=['blue', 'blue', 'orange', 'orange'])
-    for bar, label in zip(bars, [f"{v:.3f} t" for v in data['Weight (t)']]):
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2, height / 2, label, ha='center', va='center', color='black')
-    plt.xlabel('Category')
-    plt.ylabel('Weight (t)')
-    plt.title('Steel and Ballast Weight Comparison')
-    return fig
-
-def plot_cost_comparison(cost_data):
+def plot_cost_comparison(original_cost, optimized_cost):
     fig, ax = plt.subplots(figsize=(10, 7))
-    categories = cost_data['Category']
-    concrete_costs = cost_data['Concrete Cost (£)']
-    steel_costs = cost_data['Steel Cost (£)']
-    ballast_costs = cost_data['Ballast Cost (£)']
-    total_costs = cost_data['Total Cost (£)']
+    categories = ['Original', 'Optimized']
+    total_costs = [original_cost, optimized_cost]
 
-    bar_width = 0.35
+    bar_width = 0.5
     r1 = np.arange(len(categories))
-    r2 = [x + bar_width for x in r1]
 
-    ax.bar(r1, concrete_costs, color='grey', width=bar_width, label='Concrete Cost')
-    ax.bar(r1, steel_costs, bottom=concrete_costs, color='blue', width=bar_width, label='Steel Cost')
-    ax.bar(r1, ballast_costs, bottom=[i+j for i,j in zip(concrete_costs, steel_costs)], color='orange', width=bar_width, label='Ballast Cost')
-    ax.bar(r2, total_costs, color='purple', width=bar_width, label='Total Cost')
+    bars = ax.bar(r1, total_costs, color='purple', width=bar_width)
 
-    for i in range(len(r2)):
-        ax.text(r2[i], total_costs[i], f"£{total_costs[i]:.2f}", ha='center', va='bottom', color='white')
+    for i in range(len(bars)):
+        ax.text(bars[i].get_x() + bars[i].get_width() / 2, bars[i].get_height(), f"£{total_costs[i]:,.2f}", ha='center', va='bottom', color='white')
 
     ax.set_xlabel('Category', fontweight='bold')
-    ax.set_xticks([r + bar_width/2 for r in range(len(categories))])
+    ax.set_xticks(r1)
     ax.set_xticklabels(categories)
     ax.set_ylabel('Cost (£)')
     ax.set_title('Foundation Cost Comparison')
-    ax.legend()
     return fig
 
 # Streamlit Interface
@@ -325,7 +290,7 @@ if optimize_clicked:
         fig_weight = plot_steel_and_ballast(weight_data)
         st.pyplot(fig_weight)
 
-        # Calculate and plot the cost comparison
+        # Calculate costs
         original_concrete_cost, original_steel_cost, original_ballast_cost, original_total_cost = calculate_costs(
             st.session_state['original_concrete_volume'], original_steel, st.session_state['original_ballast']
         )
@@ -333,15 +298,8 @@ if optimize_clicked:
             optimized_concrete_volume, optimized_steel, B_dry_optimal
         )
 
-        cost_data = pd.DataFrame({
-            'Category': ['Original', 'Optimized'],
-            'Concrete Cost (£)': [original_concrete_cost, optimized_concrete_cost],
-            'Steel Cost (£)': [original_steel_cost, optimized_steel_cost],
-            'Ballast Cost (£)': [original_ballast_cost, optimized_ballast_cost],
-            'Total Cost (£)': [original_total_cost, optimized_total_cost]
-        })
-
-        fig_cost = plot_cost_comparison(cost_data)
+        # Plot cost comparison
+        fig_cost = plot_cost_comparison(original_total_cost, optimized_total_cost)
         st.pyplot(fig_cost)
 
     else:
