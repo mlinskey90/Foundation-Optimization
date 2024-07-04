@@ -118,7 +118,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
         d1, d2, h2 = params[0], params[1], params[3]
         theta = np.degrees(np.arctan(h2 / ((d1 - d2) / 2)))
-        return 13 - theta
+        return 12 - theta
 
     def constraint_h3(x):
         params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
