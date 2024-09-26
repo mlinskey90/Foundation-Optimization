@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from bending_moment_calculator import BendingMomentParams, calculate_bending_moment
 
 # Function definitions with docstrings
 def calculate_volumes(params):
