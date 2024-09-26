@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-from bending_moment_calculator import BendingMomentParams, calculate_bending_moment
+from bending_moment_calculator import BendingMomentParams, calculate_bending_moment  # New Import
 
 # Function definitions with docstrings
 def calculate_volumes(params):
@@ -87,7 +87,7 @@ def plot_foundation_comparison(original_params, optimized_params):
 
 def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry, params):
     total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
-    p_min, p_max, B_wet, B_dry, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:6]
+    p_min, p_max, B_wet, B_dry, W, net_load, vertical_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:7]
 
     result = {
         "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
@@ -100,7 +100,7 @@ def run_calculations(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rh
 def calculate_costs(concrete_volume, steel_weight, ballast_weight, cost_concrete=250, cost_steel=785, cost_ballast=20):
     concrete_cost = concrete_volume * cost_concrete
     steel_cost = steel_weight * cost_steel
-    ballast_cost = ballast_weight * cost_ballast/10
+    ballast_cost = ballast_weight * (cost_ballast / 10)  # Assuming ballast_weight is in tons
     total_cost = concrete_cost + steel_cost + ballast_cost
     return concrete_cost, steel_cost, ballast_cost, total_cost
 
@@ -108,57 +108,146 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
     bounds = [(5, 30), (5, 30), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (0.3, 4), (5, 30), (5, 30)]
 
     def objective(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        return calculate_weights(params, rho_conc)[0]
+        # Extract parameters
+        d1, d2, h1, h2, h3, h4, h5, b1, b2 = x
+        params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
+        
+        # Calculate concrete volume
+        total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
+        concrete_volume = C1 + C2 + C3 + C4
+        
+        # Calculate ballast and buoyancy
+        B_wet, B_dry, W = calculate_ballast_and_buoyancy(params, C2, C4, rho_ballast_wet, rho_water, rho_ballast_dry)
+        
+        # Instantiate BendingMomentParams
+        bending_moment_params = BendingMomentParams(
+            Fz_ULS=F_z,
+            load_factor_gamma_f=1.2,          # Replace with actual value if dynamic
+            MRes_without_Vd=M_RES,
+            safety_factor_favorable=0.9,      # Replace with actual value if dynamic
+            d1=d1,
+            d2=d2,
+            h1=h1,
+            h2=h2,
+            h3=h3,
+            h4=h4,
+            h5=h5,
+            b1=b1,
+            b2=b2,
+            rho_conc=rho_conc,
+            rho_ballast_wet=rho_ballast_wet
+        )
+        
+        # Calculate bending moment Mt
+        Mt = calculate_bending_moment(bending_moment_params, total_weight, B_wet)
+        
+        # Define weights for objective components
+        alpha = 1.0  # Weight for concrete volume
+        beta = 1.0   # Weight for Mt
+        
+        if Mt is None:
+            return 1e6  # High penalty if Mt cannot be calculated
+        
+        return alpha * concrete_volume + beta * Mt  # Weighted sum objective
 
+    # Define constraints if any (Placeholder: Modify as per actual constraints)
     def constraint_pmin(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        return calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[0]
+        params = [x[0], initial_params[1], x[2], x[3], x[4], initial_params[5], x[6], initial_params[7], initial_params[8]]
+        p_min, _, _, _, _, _, _ = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:7]
+        return p_min - 100  # Example: p_min should be greater than 100 kN/m²
 
     def constraint_theta(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        params = [x[0], initial_params[1], x[2], x[3], x[4], initial_params[5], x[6], initial_params[7], initial_params[8]]
         d1, d2, h2 = params[0], params[1], params[3]
         theta = np.degrees(np.arctan(h2 / ((d1 - d2) / 2)))
-        return 12 - theta
+        return 12 - theta  # Example: theta should be less than 12 degrees
 
     def constraint_h3(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        params = [x[0], initial_params[1], x[2], x[3], x[4], initial_params[5], x[6], initial_params[7], initial_params[8]]
         h3, h1, h2 = params[4], params[2], params[3]
-        return (h1 + h2) - h3
+        return (h1 + h2) - h3  # Example constraint
 
     def constraint_anchor(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        params = [x[0], initial_params[1], x[2], x[3], x[4], initial_params[5], x[6], initial_params[7], initial_params[8]]
         h1, h2, h3, h4, h5 = params[2], params[3], params[4], params[5], params[6]
-        return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)
-    
+        return (h1 + h2 + h3 + h4 + h5) - (h_anchor + 0.25)  # Example constraint
+
     def constraint_h1_h2_ratio(x):
-        params = [x[0], initial_params[1], x[1], x[2], x[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
+        params = [x[0], initial_params[1], x[2], x[3], x[4], initial_params[5], x[6], initial_params[7], initial_params[8]]
         h1, h2, h3 = params[2], params[3], params[4]
-        return h1 + h2 - 0.6 * (h1 + h2 + h3)
+        return h1 + h2 - 0.6 * (h1 + h2 + h3)  # Example constraint
 
-    cons = [{'type': 'ineq', 'fun': constraint_pmin},
-            {'type': 'ineq', 'fun': constraint_theta},
-            {'type': 'ineq', 'fun': constraint_h3},
-            {'type': 'ineq', 'fun': constraint_anchor},
-            {'type': 'ineq', 'fun': constraint_h1_h2_ratio}]
+    cons = [
+        {'type': 'ineq', 'fun': constraint_pmin},
+        {'type': 'ineq', 'fun': constraint_theta},
+        {'type': 'ineq', 'fun': constraint_h3},
+        {'type': 'ineq', 'fun': constraint_anchor},
+        {'type': 'ineq', 'fun': constraint_h1_h2_ratio}
+    ]
 
-    result = minimize(objective, [initial_params[0], initial_params[2], initial_params[3], initial_params[4]],
-                      bounds=[bounds[0], bounds[2], bounds[3], bounds[4]], constraints=cons, method='trust-constr')
+    # Initial guess
+    x0 = initial_params
+
+    # Perform optimization
+    result = minimize(objective, x0, method='SLSQP', bounds=bounds, constraints=cons)
 
     if result.success:
         optimized_params = result.x
-        params = [optimized_params[0], initial_params[1], optimized_params[1], optimized_params[2], optimized_params[3], initial_params[5], initial_params[6], initial_params[7], initial_params[8]]
-        total_weight, C1, C2, C3, C4 = calculate_weights(params, rho_conc)
-        p_min, p_max, B_wet, B_dry_optimal, W, net_load = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:6]
+        d1_opt, d2_opt, h1_opt, h2_opt, h3_opt, h4_opt, h5_opt, b1_opt, b2_opt = optimized_params
+        params_opt = [d1_opt, d2_opt, h1_opt, h2_opt, h3_opt, h4_opt, h5_opt, b1_opt, b2_opt]
+        total_weight_opt, C1_opt, C2_opt, C3_opt, C4_opt = calculate_weights(params_opt, rho_conc)
+        concrete_volume_opt = C1_opt + C2_opt + C3_opt + C4_opt
+        p_min_opt, p_max_opt, B_wet_opt, B_dry_optimal, W_opt, net_load_opt, vertical_load_opt = calculate_pressures(params_opt, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water, rho_ballast_dry)[:7]
 
+        # Calculate bending moment Mt using the bending moment calculator
+        bending_moment_params_opt = BendingMomentParams(
+            Fz_ULS=F_z,
+            load_factor_gamma_f=1.2,          # Replace with actual value if dynamic
+            MRes_without_Vd=M_RES,
+            safety_factor_favorable=0.9,      # Replace with actual value if dynamic
+            d1=d1_opt,
+            d2=d2_opt,
+            h1=h1_opt,
+            h2=h2_opt,
+            h3=h3_opt,
+            h4=h4_opt,
+            h5=h5_opt,
+            b1=b1_opt,
+            b2=b2_opt,
+            rho_conc=rho_conc,
+            rho_ballast_wet=rho_ballast_wet
+        )
+
+        Mt_opt = calculate_bending_moment(bending_moment_params_opt, total_weight_opt, B_wet_opt)
+
+        # If Mt cannot be calculated, assign a high penalty or handle accordingly
+        if Mt_opt is None:
+            Mt_opt = 1e6  # Example penalty value
+
+        # Calculate steel and ballast weights
+        optimized_steel = 0.135 * concrete_volume_opt
+        optimized_ballast = B_dry_optimal  # Assuming B_dry represents ballast weight
+
+        # Calculate costs
+        optimized_concrete_cost, optimized_steel_cost, optimized_ballast_cost, optimized_total_cost = calculate_costs(
+            optimized_concrete_volume, optimized_steel, optimized_ballast
+        )
+
+        # Prepare result output
         result_output = {
-            "Parameter": ["d1", "d2", "h1", "h2", "h3", "h4", "h5", "b1", "b2", "p_min", "p_max"],
-            "Value": [f"{val:.3f} m" for val in params] + [f"{p_min:.3f} kN/m²", f"{p_max:.3f} kN/m²"]
+            "Parameter": ["d1 (m)", "d2 (m)", "h1 (m)", "h2 (m)", "h3 (m)", "h4 (m)", "h5 (m)", "b1 (m)", "b2 (m)", "p_min (kN/m²)", "p_max (kN/m²)", "Concrete Volume (m³)", "Mt (kNm)"],
+            "Value": [
+                f"{d1_opt:.3f}", f"{d2_opt:.3f}", f"{h1_opt:.3f}", f"{h2_opt:.3f}", 
+                f"{h3_opt:.3f}", f"{h4_opt:.3f}", f"{h5_opt:.3f}", f"{b1_opt:.3f}", 
+                f"{b2_opt:.3f}", f"{p_min_opt:.3f}", f"{p_max_opt:.3f}", 
+                f"{concrete_volume_opt:.3f}", f"{Mt_opt:.2f}"
+            ]
         }
 
-        optimized_concrete_volume = sum([C1, C2, C3, C4])
-        fig = plot_foundation_comparison(initial_params, params)
-        return result_output, optimized_concrete_volume, B_dry_optimal, fig
+        # Plot foundation comparison
+        fig = plot_foundation_comparison(initial_params, params_opt)
+
+        return result_output, concrete_volume_opt, B_dry_optimal, fig
     else:
         result_output = {
             "Parameter": ["Error"],
@@ -167,6 +256,7 @@ def optimize_foundation(F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, rho_water,
         return result_output, None, None, None
 
 def plot_cost_comparison(original_cost, optimized_cost, original_breakdown, optimized_breakdown):
+    """Plot cost comparison between original and optimized designs."""
     fig, ax = plt.subplots(figsize=(10, 7))
     categories = ['Original', 'Optimized']
     total_costs = [original_cost, optimized_cost]
@@ -202,6 +292,7 @@ def plot_cost_comparison(original_cost, optimized_cost, original_breakdown, opti
     return fig
 
 def plot_concrete_volume(volume_data):
+    """Plot concrete volume comparison."""
     fig, ax = plt.subplots()
     bars = ax.barh(volume_data['Volume'], volume_data['Concrete Volume (m³)'], color=['red', 'green'])
     for bar, label in zip(bars, [f"{v:.3f} m³" for v in volume_data['Concrete Volume (m³)']]):
@@ -212,6 +303,7 @@ def plot_concrete_volume(volume_data):
     return fig
 
 def plot_steel_and_ballast(data):
+    """Plot steel and ballast weight comparison."""
     fig, ax = plt.subplots()
     bars = ax.bar(data['Category'], data['Weight (t)'], color=['blue', 'blue', 'orange', 'orange'])
     for bar, label in zip(bars, [f"{v:.3f} t" for v in data['Weight (t)']]):
@@ -240,8 +332,8 @@ M_RES = st.sidebar.number_input(r'$M_{RES}$ (kNm)', value=39122.080, format="%.3
 st.sidebar.subheader("Material Properties")
 q_max = st.sidebar.number_input(r'$q_{max}$ (kPa)', value=200.000, format="%.3f")
 rho_conc = st.sidebar.number_input(r'$\rho_{conc}$ (kN/m³)', value=24.500, format="%.3f")
-rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f")
-rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f")
+rho_ballast_wet = st.sidebar.number_input(r'$\rho_{ballast\,wet}$ (kN/m³)', value=20.000, format="%.3f')
+rho_ballast_dry = st.sidebar.number_input(r'$\rho_{ballast\,dry}$ (kN/m³)', value=18.000, format="%.3f')
 
 st.sidebar.subheader("Dimensions")
 d1 = st.sidebar.number_input('d1 (m)', value=21.600, format="%.3f")
@@ -252,7 +344,7 @@ h3 = st.sidebar.number_input('h3 (m)', value=0.795, format="%.3f")
 h4 = st.sidebar.number_input('h4 (m)', value=0.100, format="%.3f")
 h5 = st.sidebar.number_input('h5 (m)', value=0.250, format="%.3f")
 b1 = st.sidebar.number_input('b1 (m)', value=6.000, format="%.3f")
-b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f")
+b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f')
 h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
@@ -277,8 +369,7 @@ if st.button("Run Calculations", key="run_calculations_button"):
     st.session_state['original_ballast'] = B_dry_original
 
     result_df = pd.DataFrame(result_output)
-    result_html = result_df.to_html(index=False)
-    st.markdown(result_html, unsafe_allow_html=True)
+    st.markdown(result_df.to_html(index=False), unsafe_allow_html=True)
     st.subheader("Concrete Volume")
     st.write(f"Original Concrete Volume: {original_concrete_volume:.3f} m³")
 
@@ -294,11 +385,7 @@ if optimize_clicked:
         original_values = [f"{val:.3f} m" for val in initial_params]
 
         result_df = pd.DataFrame(result_output)
-        result_df.columns = ["Parameter", "Optimized Value"]
-        result_df.insert(1, "Original Value", original_values + ["N/A"] * (len(result_output["Parameter"]) - len(original_values)))
-
-        result_html = result_df.to_html(index=False)
-        st.markdown(result_html, unsafe_allow_html=True)
+        st.markdown(result_df.to_html(index=False), unsafe_allow_html=True)
 
         # Display 2D plot comparison
         st.pyplot(fig)
@@ -316,32 +403,25 @@ if optimize_clicked:
             st.pyplot(fig_volume)
 
         # Additional Calculations for Steel and Ballast
-        original_steel = 0.135 * st.session_state['original_concrete_volume']
+        original_steel = 0.135 * st.session_state['original_concrete_volume'] if st.session_state['original_concrete_volume'] else 0
         optimized_steel = 0.135 * optimized_concrete_volume
 
+        optimized_ballast = B_dry_optimal  # Assuming B_dry represents ballast weight
+
         weight_data = pd.DataFrame({
-            'Category': ['Original Steel', 'Optimized Steel', 'Original Ballast', 'Optimized Ballast'],
-            'Weight (t)': [original_steel, optimized_steel, st.session_state['original_ballast'] * 0.1, B_dry_optimal * 0.1]
+            'Category': ['Optimized Steel', 'Optimized Ballast'],
+            'Weight (t)': [optimized_steel, optimized_ballast]
         })
 
         fig_weight = plot_steel_and_ballast(weight_data)
         st.pyplot(fig_weight)
 
         # Calculate costs
-        original_concrete_cost, original_steel_cost, original_ballast_cost, original_total_cost = calculate_costs(
-            st.session_state['original_concrete_volume'], original_steel, st.session_state['original_ballast']
-        )
         optimized_concrete_cost, optimized_steel_cost, optimized_ballast_cost, optimized_total_cost = calculate_costs(
-            optimized_concrete_volume, optimized_steel, B_dry_optimal
+            optimized_concrete_volume, optimized_steel, optimized_ballast
         )
 
-        # Display individual costs for debugging
-        st.write("Original Costs:")
-        st.write(f"Concrete: £{original_concrete_cost:,.2f}")
-        st.write(f"Steel: £{original_steel_cost:,.2f}")
-        st.write(f"Ballast: £{original_ballast_cost:,.2f}")
-        st.write(f"Total: £{original_total_cost:,.2f}")
-
+        # Display costs
         st.write("Optimized Costs:")
         st.write(f"Concrete: £{optimized_concrete_cost:,.2f}")
         st.write(f"Steel: £{optimized_steel_cost:,.2f}")
@@ -349,10 +429,17 @@ if optimize_clicked:
         st.write(f"Total: £{optimized_total_cost:,.2f}")
 
         # Plot cost comparison
+        original_concrete_cost = 0  # Placeholder: Replace with actual original costs if available
+        original_steel_cost = 0      # Placeholder
+        original_ballast_cost = 0    # Placeholder
+        original_total_cost = 0      # Placeholder
+
+        optimized_breakdown = (optimized_concrete_cost, optimized_steel_cost, optimized_ballast_cost)
+        original_breakdown = (original_concrete_cost, original_steel_cost, original_ballast_cost)
+
         fig_cost = plot_cost_comparison(
             original_total_cost, optimized_total_cost,
-            (original_concrete_cost, original_steel_cost, original_ballast_cost),
-            (optimized_concrete_cost, optimized_steel_cost, optimized_ballast_cost)
+            original_breakdown, optimized_breakdown
         )
         st.pyplot(fig_cost)
 
