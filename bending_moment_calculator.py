@@ -25,6 +25,29 @@ class BendingMomentParams:
     rho_conc: float                   # Concrete density (kN/m³)
     rho_ballast_wet: float            # Ballast density (wet) (kN/m³)
 
+def calculate_Vd(Fz_ULS: float,
+               load_factor_gamma_f: float,
+               MRes_without_Vd: float,
+               safety_factor_favorable: float,
+               total_weight: float,
+               B_wet: float) -> float:
+    """
+    Calculate Vd.
+    Formula: Vd = (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
+    """
+    return (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
+
+def calculate_eccentricity(MRes_without_Vd: float,
+                          load_factor_gamma_f: float,
+                          Vd: float) -> Optional[float]:
+    """
+    Calculate eccentricity (e).
+    Formula: e = (MRes_without_Vd * load_factor_gamma_f) / Vd
+    """
+    if Vd == 0:
+        return None
+    return (MRes_without_Vd * load_factor_gamma_f) / Vd
+
 def calculate_A_eff(d1: float, e: float) -> Optional[float]:
     """
     Calculate A_eff (Effective foundation area).
@@ -85,28 +108,41 @@ def calculate_Beff(Leff: float, Be: float, Le: float) -> Optional[float]:
     except:
         return None
 
-def calculate_Vd(Fz_ULS: float,
-               load_factor_gamma_f: float,
-               MRes_without_Vd: float,
-               safety_factor_favorable: float,
-               total_weight: float,
-               B_wet: float) -> float:
+# Placeholder for H'
+def calculate_H_prime(...) -> Optional[float]:
     """
-    Calculate Vd.
-    Formula: Vd = (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
+    Calculate H'.
+    Formula: [Provide the formula here]
     """
-    return (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
+    # TODO: Implement the formula for H'
+    return None
 
-def calculate_eccentricity(MRes_without_Vd: float,
-                          load_factor_gamma_f: float,
-                          Vd: float) -> Optional[float]:
+# Placeholder for Madd
+def calculate_Madd(...) -> Optional[float]:
     """
-    Calculate eccentricity (e).
-    Formula: e = (MRes_without_Vd * load_factor_gamma_f) / Vd
+    Calculate Madd.
+    Formula: [Provide the formula here]
     """
-    if Vd == 0:
-        return None
-    return (MRes_without_Vd * load_factor_gamma_f) / Vd
+    # TODO: Implement the formula for Madd
+    return None
+
+# Placeholder for Fxy
+def calculate_Fxy(...) -> Optional[float]:
+    """
+    Calculate Fxy.
+    Formula: [Provide the formula here]
+    """
+    # TODO: Implement the formula for Fxy
+    return None
+
+# Placeholder for Fz
+def calculate_Fz(...) -> Optional[float]:
+    """
+    Calculate Fz.
+    Formula: [Provide the formula here]
+    """
+    # TODO: Implement the formula for Fz
+    return None
 
 def calculate_L_over_6(Leff: float, Beff: float) -> float:
     """
@@ -115,46 +151,8 @@ def calculate_L_over_6(Leff: float, Beff: float) -> float:
     """
     return max(Leff, Beff) / 6
 
-def calculate_Dx(d1: float, d2: float) -> float:
-    """
-    Calculate Dx.
-    Formula: Dx = (d1 - d2) / 2
-    """
-    return (d1 - d2) / 2
-
-def calculate_Lp(e: float, L_over_6: float, max_diameter: float, min_diameter: float) -> Optional[float]:
-    """
-    Calculate Lp.
-    Formula: IF(e > L_over_6, 3 * ((MAX(d1, d2) / 2) - e), "N/A")
-    """
-    if e > L_over_6:
-        return 3 * ((max_diameter / 2) - e)
-    else:
-        return None  # "N/A"
-
-def calculate_sigma_min(e: float, L_over_6: float, Vd: float,
-                      Leff: float, Beff: float, Le: float,
-                      Mres: float) -> Optional[float]:
-    """
-    Calculate sigma_min.
-    Formula:
-    IF(e > L_over_6, 0, (Vd / (Leff * Beff)) - (6 * Mres) / (MIN(Leff, Beff) * (MAX(Leff, Beff)^2)))
-    """
-    if e > L_over_6:
-        return 0
-    else:
-        denominator1 = Leff * Beff
-        min_Leff_Beff = min(Leff, Beff)
-        max_Leff_Beff = max(Leff, Beff)
-        if denominator1 == 0 or (min_Leff_Beff * (max_Leff_Beff ** 2)) == 0:
-            return None  # Avoid division by zero
-        try:
-            return (Vd / denominator1) - ((6 * Mres) / (min_Leff_Beff * (max_Leff_Beff ** 2)))
-        except:
-            return None
-
 def calculate_sigma_max(e: float, L_over_6: float, Vd: float,
-                      Leff: float, Beff: float) -> Optional[float]:
+                       Leff: float, Beff: float) -> Optional[float]:
     """
     Calculate sigma_max.
     Formula:
@@ -181,6 +179,45 @@ def calculate_sigma_max(e: float, L_over_6: float, Vd: float,
             return (Vd / denominator1) + ((6 * Vd) / denominator2)
         except:
             return None
+
+def calculate_sigma_min(e: float, L_over_6: float, Vd: float,
+                       Leff: float, Beff: float, Le: float,
+                       Mres: float) -> Optional[float]:
+    """
+    Calculate sigma_min.
+    Formula:
+    IF(e > L_over_6, 0, (Vd / (Leff * Beff)) - (6 * Mres) / (MIN(Leff, Beff) * (MAX(Leff, Beff)^2)))
+    """
+    if e > L_over_6:
+        return 0
+    else:
+        denominator1 = Leff * Beff
+        min_Leff_Beff = min(Leff, Beff)
+        max_Leff_Beff = max(Leff, Beff)
+        if denominator1 == 0 or (min_Leff_Beff * (max_Leff_Beff ** 2)) == 0:
+            return None  # Avoid division by zero
+        try:
+            return (Vd / denominator1) - ((6 * Mres) / (min_Leff_Beff * (max_Leff_Beff ** 2)))
+        except:
+            return None
+
+def calculate_Lp(e: float, L_over_6: float, Lp_formula_params) -> Optional[float]:
+    """
+    Calculate Lp.
+    Formula: IF(e > L_over_6, 3 * ((MAX(d1, d2) / 2) - e), "N/A")
+    """
+    if e > L_over_6:
+        max_diameter = max(Lp_formula_params['d1'], Lp_formula_params['d2'])
+        return 3 * ((max_diameter / 2) - e)
+    else:
+        return None  # "N/A"
+
+def calculate_Dx(d1: float, d2: float) -> float:
+    """
+    Calculate Dx.
+    Formula: Dx = (d1 - d2) / 2
+    """
+    return (d1 - d2) / 2
 
 def calculate_sigma_xxf(e: float, L_over_6: float, Lp: Optional[float],
                        Dx: float, sigma_max: Optional[float], sigma_min: Optional[float],
@@ -218,22 +255,6 @@ def calculate_sigma_xxf(e: float, L_over_6: float, Lp: Optional[float],
         except:
             return None
 
-def calculate_sigma_net(sigma_xxf: Optional[float], e: float,
-                       d1: float, adjacent_stress: Optional[float]) -> Optional[float]:
-    """
-    Calculate sigma_net.
-    Formula: IF(ISNUMBER(sigma_xxf), IF(e >= d1/2, "N/A", sigma_xxf - adjacent_stress), "N/A")
-    """
-    if isinstance(sigma_xxf, (int, float)):
-        if e >= d1 / 2:
-            return None  # "N/A"
-        else:
-            if adjacent_stress is None:
-                return sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
-            return sigma_xxf - adjacent_stress
-    else:
-        return None  # "N/A"
-
 def calculate_sigma_adjacent(e: float, d1: float, d2: float,
                             h1: float, h2: float, h3: float,
                             safety_factor_favorable: float,
@@ -252,6 +273,22 @@ def calculate_sigma_adjacent(e: float, d1: float, d2: float,
         return (h1 + h2) * rho_conc * safety_factor_favorable
     else:
         return ((h1 + h2) * rho_conc * safety_factor_favorable) + ((h1 + h2) - 0.5 * h2) * rho_ballast_wet * safety_factor_favorable
+
+def calculate_sigma_net(sigma_xxf: Optional[float], e: float,
+                       d1: float, adjacent_stress: Optional[float]) -> Optional[float]:
+    """
+    Calculate sigma_net.
+    Formula: IF(ISNUMBER(sigma_xxf), IF(e >= d1/2, "N/A", sigma_xxf - adjacent_stress), "N/A")
+    """
+    if isinstance(sigma_xxf, (int, float)):
+        if e >= d1 / 2:
+            return None  # "N/A"
+        else:
+            if adjacent_stress is None:
+                return sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
+            return sigma_xxf - adjacent_stress
+    else:
+        return None  # "N/A"
 
 def calculate_mc(sigma_net: Optional[float], Dx: float) -> Optional[float]:
     """
@@ -290,6 +327,31 @@ def calculate_mt(mc: Optional[float], wb: Optional[float]) -> Optional[float]:
     except:
         return None
 
+def calculate_Fxy(...) -> Optional[float]:
+    """
+    Calculate Fxy.
+    Formula: [Provide the formula here]
+    """
+    # TODO: Implement the formula for Fxy
+    return None
+
+def calculate_Fz(...) -> Optional[float]:
+    """
+    Calculate Fz.
+    Formula: [Provide the formula here]
+    """
+    # TODO: Implement the formula for Fz
+    return None
+
+# Placeholder for sigma_x-xsc * FOSfavorable
+def calculate_sigma_x_xsc_FOSfavorable(...) -> Optional[float]:
+    """
+    Calculate sigma_x-xsc * FOSfavorable.
+    Formula: [Provide the formula here]
+    """
+    # TODO: Implement the formula for sigma_x-xsc * FOSfavorable
+    return None
+
 def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B_wet: float) -> Optional[float]:
     """
     Main function to calculate the bending moment Mt = Mc * wb.
@@ -304,15 +366,17 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         total_weight=total_weight,
         B_wet=B_wet
     )
+    if Vd is None:
+        return None  # Cannot proceed without Vd
     
-    # Step 2: Calculate Eccentricity
+    # Step 2: Calculate e (eccentricity)
     e = calculate_eccentricity(
         MRes_without_Vd=params.MRes_without_Vd,
         load_factor_gamma_f=params.load_factor_gamma_f,
         Vd=Vd
     )
     if e is None:
-        return None  # Cannot proceed without eccentricity
+        return None  # Cannot proceed without e
     
     # Step 3: Calculate A_eff
     A_eff = calculate_A_eff(d1=params.d1, e=e)
@@ -320,50 +384,51 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         return None  # Cannot proceed without A_eff
     
     # Step 4: Calculate B_e
-    Be = calculate_B_e(d1=params.d1, e=e)
-    if Be is None:
+    B_e = calculate_B_e(d1=params.d1, e=e)
+    if B_e is None:
         return None  # Cannot proceed without B_e
     
     # Step 5: Calculate L_e
-    L_e = calculate_L_e(d1=params.d1, B_e=Be)
+    L_e = calculate_L_e(d1=params.d1, B_e=B_e)
     if L_e is None:
         return None  # Cannot proceed without L_e
     
     # Step 6: Calculate Leff
-    Leff = calculate_Leff(A_eff=A_eff, L_e=L_e, B_e=Be)
+    Leff = calculate_Leff(A_eff=A_eff, L_e=L_e, B_e=B_e)
     if Leff is None:
         return None  # Cannot proceed without Leff
     
     # Step 7: Calculate Beff
-    # Le is assumed to be 0.6 meters if not provided
+    # Le is assumed to be 0.6 meters (H125) as it's not part of BendingMomentParams
     Le = 0.6
-    Beff = calculate_Beff(Leff=Leff, Be=Be, Le=Le)
+    Beff = calculate_Beff(Leff=Leff, Be=B_e, Le=Le)
     if Beff is None:
         return None  # Cannot proceed without Beff
     
-    # Step 8: Calculate L_over_6
+    # Step 8: Calculate H' (Placeholder)
+    H_prime = calculate_H_prime(...)  # Replace ... with actual parameters when available
+    # TODO: Implement H_prime calculation
+    # For now, we'll skip using H_prime until the formula is provided
+    
+    # Step 9: Calculate Madd (Placeholder)
+    Madd = calculate_Madd(...)  # Replace ... with actual parameters when available
+    # TODO: Implement Madd calculation
+    
+    # Step 10: Calculate Mres (Already provided as MRes_without_Vd)
+    Mres = params.MRes_without_Vd
+    
+    # Step 11: Calculate Fxy (Placeholder)
+    Fxy = calculate_Fxy(...)  # Replace ... with actual parameters when available
+    # TODO: Implement Fxy calculation
+    
+    # Step 12: Calculate Fz (Placeholder)
+    Fz = calculate_Fz(...)  # Replace ... with actual parameters when available
+    # TODO: Implement Fz calculation
+    
+    # Step 13: Calculate L/6
     L_over_6 = calculate_L_over_6(Leff=Leff, Beff=Beff)
     
-    # Step 9: Calculate Dx
-    Dx = calculate_Dx(d1=params.d1, d2=params.d2)
-    
-    # Step 10: Calculate Lp
-    Lp = calculate_Lp(e=e, L_over_6=L_over_6, max_diameter=params.d1, min_diameter=params.d2)
-    
-    # Step 11: Calculate sigma_min
-    sigma_min = calculate_sigma_min(
-        e=e,
-        L_over_6=L_over_6,
-        Vd=Vd,
-        Leff=Leff,
-        Beff=Beff,
-        Le=Le,
-        Mres=params.MRes_without_Vd
-    )
-    if sigma_min is None and e <= L_over_6:
-        return None  # Cannot proceed without sigma_min
-    
-    # Step 12: Calculate sigma_max
+    # Step 14: Calculate sigma_max
     sigma_max = calculate_sigma_max(
         e=e,
         L_over_6=L_over_6,
@@ -374,20 +439,31 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     if sigma_max is None:
         return None  # Cannot proceed without sigma_max
     
-    # Step 13: Calculate Adjacent Stress (H145)
-    adjacent_stress = calculate_sigma_adjacent(
+    # Step 15: Calculate sigma_min
+    sigma_min = calculate_sigma_min(
         e=e,
-        d1=params.d1,
-        d2=params.d2,
-        h1=params.h1,
-        h2=params.h2,
-        h3=params.h3,
-        safety_factor_favorable=params.safety_factor_favorable,
-        rho_conc=params.rho_conc,
-        rho_ballast_wet=params.rho_ballast_wet
+        L_over_6=L_over_6,
+        Vd=Vd,
+        Leff=Leff,
+        Beff=Beff,
+        Le=Le,
+        Mres=Mres
     )
+    if sigma_min is None and e <= L_over_6:
+        return None  # Cannot proceed without sigma_min
     
-    # Step 14: Calculate sigma_xxf
+    # Step 16: Calculate Lp
+    Lp = calculate_Lp(
+        e=e,
+        L_over_6=L_over_6,
+        Lp_formula_params={'d1': params.d1, 'd2': params.d2}
+    )
+    # Lp is None if "N/A"
+    
+    # Step 17: Calculate Dx
+    Dx = calculate_Dx(d1=params.d1, d2=params.d2)
+    
+    # Step 18: Calculate sigma_x-xf
     sigma_xxf = calculate_sigma_xxf(
         e=e,
         L_over_6=L_over_6,
@@ -397,16 +473,26 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         sigma_min=sigma_min,
         d1=params.d1
     )
+    if sigma_xxf is None:
+        return None  # Cannot proceed without sigma_x-xf
     
-    # Step 15: Calculate sigma_net
+    # Step 19: Calculate sigma_x-xsc * FOSfavorable (Placeholder)
+    sigma_x_xsc_FOSfavorable = calculate_sigma_x_xsc_FOSfavorable(...)  # Replace ... with actual parameters
+    # TODO: Implement sigma_x-xsc * FOSfavorable calculation
+    
+    # Step 20: Calculate sigma_net
     sigma_net = calculate_sigma_net(
         sigma_xxf=sigma_xxf,
         e=e,
         d1=params.d1,
-        adjacent_stress=adjacent_stress
+        adjacent_stress=None  # Will be calculated next
     )
+    # Note: Adjust 'adjacent_stress' as per your requirements
     
-    # Step 16: Calculate Mc
+    if sigma_net is None:
+        return None  # Cannot proceed without sigma_net
+    
+    # Step 21: Calculate Mc
     Mc = calculate_mc(
         sigma_net=sigma_net,
         Dx=Dx
@@ -414,7 +500,7 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     if Mc is None:
         return None  # Cannot proceed without Mc
     
-    # Step 17: Calculate wb
+    # Step 22: Calculate wb
     wb = calculate_wb(
         d1=params.d1,
         d2=params.d2
@@ -422,11 +508,13 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     if wb is None:
         return None  # Cannot proceed without wb
     
-    # Step 18: Calculate Mt
+    # Step 23: Calculate Mt
     Mt = calculate_mt(
         mc=Mc,
         wb=wb
     )
+    if Mt is None:
+        return None  # Cannot proceed without Mt
     
     return Mt
 
@@ -462,4 +550,3 @@ if __name__ == "__main__":
         print(f"Calculated Bending Moment (Mt): {Mt:.2f} kNm")
     else:
         print("Bending Moment (Mt) could not be calculated due to insufficient data or 'N/A' conditions.")
-
