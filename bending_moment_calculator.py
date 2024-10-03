@@ -28,7 +28,9 @@ def calculate_Vd(total_weight: float, B_wet: float, Fz_ULS: float, safety_factor
     Calculate Vd.
     Formula: Vd = (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
     """
-    return (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
+    Vd = (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
+    print(f"Step 1: Vd = {Vd} kN")
+    return Vd
 
 def calculate_eccentricity(MRes_without_Vd: float, load_factor_gamma_f: float = 1.0, Vd: float = 0.0) -> Optional[float]:
     """
@@ -36,8 +38,11 @@ def calculate_eccentricity(MRes_without_Vd: float, load_factor_gamma_f: float = 
     Formula: e = (MRes_without_Vd * load_factor_gamma_f) / Vd
     """
     if Vd == 0:
+        print("Step 2: Vd is zero, cannot calculate eccentricity (e).")
         return None
-    return (MRes_without_Vd * load_factor_gamma_f) / Vd
+    e = (MRes_without_Vd * load_factor_gamma_f) / Vd
+    print(f"Step 2: Eccentricity (e) = {e} m")
+    return e
 
 def calculate_A_eff(d1: float, e: float) -> Optional[float]:
     """
@@ -47,11 +52,15 @@ def calculate_A_eff(d1: float, e: float) -> Optional[float]:
     try:
         ratio = e / (0.5 * d1)
         if not -1 <= ratio <= 1:
+            print(f"Step 3: Invalid ratio for acos: {ratio}. Cannot calculate A_eff.")
             return None  # Invalid input for arccos
         term1 = 0.25 * d1**2 * np.arccos(ratio)
         term2 = e * np.sqrt((0.25 * d1**2) - e**2)
-        return 2 * (term1 - term2)
-    except:
+        A_eff = 2 * (term1 - term2)
+        print(f"Step 3: A_eff = {A_eff} m²")
+        return A_eff
+    except Exception as ex:
+        print(f"Step 3: Error calculating A_eff: {ex}")
         return None
 
 def calculate_B_e(d1: float, e: float) -> Optional[float]:
@@ -59,7 +68,9 @@ def calculate_B_e(d1: float, e: float) -> Optional[float]:
     Calculate B_e (Ellipse minor axis).
     Formula: B_e = 2 * (0.5 * d1 - e)
     """
-    return 2 * (0.5 * d1 - e)
+    B_e = 2 * (0.5 * d1 - e)
+    print(f"Step 4: B_e = {B_e} m")
+    return B_e
 
 def calculate_L_e(d1: float, B_e: float) -> Optional[float]:
     """
@@ -70,9 +81,13 @@ def calculate_L_e(d1: float, B_e: float) -> Optional[float]:
         ratio = 1 - (B_e / d1)
         inside_sqrt = 1 - ratio**2
         if inside_sqrt < 0:
+            print(f"Step 5: Invalid inside_sqrt value: {inside_sqrt}. Cannot calculate L_e.")
             return None  # Invalid input for sqrt
-        return 2 * (0.5 * d1) * np.sqrt(inside_sqrt)
-    except:
+        L_e = 2 * (0.5 * d1) * np.sqrt(inside_sqrt)
+        print(f"Step 5: L_e = {L_e} m")
+        return L_e
+    except Exception as ex:
+        print(f"Step 5: Error calculating L_e: {ex}")
         return None
 
 def calculate_Leff(A_eff: float, L_e: float, B_e: float) -> Optional[float]:
@@ -81,10 +96,14 @@ def calculate_Leff(A_eff: float, L_e: float, B_e: float) -> Optional[float]:
     Formula: Leff = sqrt(A_eff * L_e / B_e)
     """
     if B_e == 0:
+        print("Step 6: B_e is zero, cannot calculate Leff.")
         return None  # Avoid division by zero
     try:
-        return np.sqrt((A_eff * L_e) / B_e)
-    except:
+        Leff = np.sqrt((A_eff * L_e) / B_e)
+        print(f"Step 6: Leff = {Leff} m")
+        return Leff
+    except Exception as ex:
+        print(f"Step 6: Error calculating Leff: {ex}")
         return None
 
 def calculate_Beff(Leff: float, Be: float, Le: float = 0.6) -> Optional[float]:
@@ -93,10 +112,14 @@ def calculate_Beff(Leff: float, Be: float, Le: float = 0.6) -> Optional[float]:
     Formula: Beff = Leff * Be / Le
     """
     if Le == 0:
+        print("Step 7: Le is zero, cannot calculate Beff.")
         return None  # Avoid division by zero
     try:
-        return (Leff * Be) / Le
-    except:
+        Beff = (Leff * Be) / Le
+        print(f"Step 7: Beff = {Beff} m")
+        return Beff
+    except Exception as ex:
+        print(f"Step 7: Error calculating Beff: {ex}")
         return None
 
 # Placeholder for H'
@@ -106,6 +129,7 @@ def calculate_H_prime(...) -> Optional[float]:
     Formula: [Provide the formula here]
     """
     # TODO: Implement the formula for H'
+    print("Step 8: H' calculation is not implemented yet.")
     return None
 
 # Placeholder for Madd
@@ -115,6 +139,7 @@ def calculate_Madd(...) -> Optional[float]:
     Formula: [Provide the formula here]
     """
     # TODO: Implement the formula for Madd
+    print("Step 9: Madd calculation is not implemented yet.")
     return None
 
 # Placeholder for Fxy
@@ -124,6 +149,7 @@ def calculate_Fxy(...) -> Optional[float]:
     Formula: [Provide the formula here]
     """
     # TODO: Implement the formula for Fxy
+    print("Step 11: Fxy calculation is not implemented yet.")
     return None
 
 # Placeholder for Fz
@@ -133,6 +159,7 @@ def calculate_Fz(...) -> Optional[float]:
     Formula: [Provide the formula here]
     """
     # TODO: Implement the formula for Fz
+    print("Step 12: Fz calculation is not implemented yet.")
     return None
 
 def calculate_L_over_6(Leff: float, Beff: float) -> float:
@@ -140,7 +167,9 @@ def calculate_L_over_6(Leff: float, Beff: float) -> float:
     Calculate L_over_6.
     Formula: L_over_6 = MAX(Leff, Beff) / 6
     """
-    return max(Leff, Beff) / 6
+    L_over_6 = max(Leff, Beff) / 6
+    print(f"Step 13: L_over_6 = {L_over_6} m")
+    return L_over_6
 
 def calculate_sigma_max(e: float, L_over_6: float, Vd: float,
                        Leff: float, Beff: float) -> Optional[float]:
@@ -156,19 +185,27 @@ def calculate_sigma_max(e: float, L_over_6: float, Vd: float,
     if e > L_over_6:
         denominator = (3 * min_Leff_Beff) * (0.5 * max_Leff_Beff - e)
         if denominator == 0:
+            print("Step 14: Denominator is zero in sigma_max calculation.")
             return None  # Avoid division by zero
         try:
-            return (2 * Vd) / denominator
-        except:
+            sigma_max = (2 * Vd) / denominator
+            print(f"Step 14: sigma_max = {sigma_max} kN/m²")
+            return sigma_max
+        except Exception as ex:
+            print(f"Step 14: Error calculating sigma_max: {ex}")
             return None
     else:
         denominator1 = Leff * Beff
         denominator2 = min_Leff_Beff * (max_Leff_Beff ** 2)
         if denominator1 == 0 or denominator2 == 0:
+            print("Step 14: One of the denominators is zero in sigma_max calculation.")
             return None  # Avoid division by zero
         try:
-            return (Vd / denominator1) + ((6 * Vd) / denominator2)
-        except:
+            sigma_max = (Vd / denominator1) + ((6 * Vd) / denominator2)
+            print(f"Step 14: sigma_max = {sigma_max} kN/m²")
+            return sigma_max
+        except Exception as ex:
+            print(f"Step 14: Error calculating sigma_max: {ex}")
             return None
 
 def calculate_sigma_min(e: float, L_over_6: float, Vd: float,
@@ -180,16 +217,22 @@ def calculate_sigma_min(e: float, L_over_6: float, Vd: float,
     IF(e > L_over_6, 0, (Vd / (Leff * Beff)) - (6 * Mres) / (MIN(Leff, Beff) * (MAX(Leff, Beff)^2)))
     """
     if e > L_over_6:
-        return 0
+        sigma_min = 0
+        print(f"Step 15: sigma_min = {sigma_min} kN/m²")
+        return sigma_min
     else:
         denominator1 = Leff * Beff
         min_Leff_Beff = min(Leff, Beff)
         max_Leff_Beff = max(Leff, Beff)
         if denominator1 == 0 or (min_Leff_Beff * (max_Leff_Beff ** 2)) == 0:
+            print("Step 15: Denominator is zero in sigma_min calculation.")
             return None  # Avoid division by zero
         try:
-            return (Vd / denominator1) - ((6 * Mres) / (min_Leff_Beff * (max_Leff_Beff ** 2)))
-        except:
+            sigma_min = (Vd / denominator1) - ((6 * Mres) / (min_Leff_Beff * (max_Leff_Beff ** 2)))
+            print(f"Step 15: sigma_min = {sigma_min} kN/m²")
+            return sigma_min
+        except Exception as ex:
+            print(f"Step 15: Error calculating sigma_min: {ex}")
             return None
 
 def calculate_Lp(e: float, L_over_6: float, d1: float, d2: float) -> Optional[float]:
@@ -199,8 +242,11 @@ def calculate_Lp(e: float, L_over_6: float, d1: float, d2: float) -> Optional[fl
     """
     if e > L_over_6:
         max_diameter = max(d1, d2)
-        return 3 * ((max_diameter / 2) - e)
+        Lp = 3 * ((max_diameter / 2) - e)
+        print(f"Step 16: Lp = {Lp} m")
+        return Lp
     else:
+        print("Step 16: Lp = N/A")
         return None  # "N/A"
 
 def calculate_Dx(d1: float, d2: float) -> float:
@@ -208,7 +254,9 @@ def calculate_Dx(d1: float, d2: float) -> float:
     Calculate Dx.
     Formula: Dx = (d1 - d2) / 2
     """
-    return (d1 - d2) / 2
+    Dx = (d1 - d2) / 2
+    print(f"Step 17: Dx = {Dx} m")
+    return Dx
 
 def calculate_sigma_xxf(e: float, L_over_6: float, Lp: Optional[float],
                        Dx: float, sigma_max: Optional[float], sigma_min: Optional[float],
@@ -222,28 +270,41 @@ def calculate_sigma_xxf(e: float, L_over_6: float, Lp: Optional[float],
             sigma_max - ((sigma_max - sigma_min) / d1) * Dx))
     """
     if e >= d1 / 2:
+        print("Step 18: sigma_x-xf = N/A (e >= d1/2)")
         return None  # "N/A"
     if e > L_over_6:
         if Lp is None or Dx == 0:
+            print("Step 18: sigma_x-xf = N/A-Lp<Dx")
             return None  # "N/A-Lp<Dx"
         if Lp < Dx:
+            print("Step 18: sigma_x-xf = N/A-Lp<Dx")
             return None  # "N/A-Lp<Dx"
         if Lp == 0:
+            print("Step 18: Lp is zero, cannot calculate sigma_x-xf.")
             return None  # Avoid division by zero
         if sigma_max is None or sigma_min is None:
+            print("Step 18: sigma_max or sigma_min is None, cannot calculate sigma_x-xf.")
             return None
         try:
-            return sigma_max - ((sigma_max - sigma_min) / Lp) * Dx
-        except:
+            sigma_xxf = sigma_max - ((sigma_max - sigma_min) / Lp) * Dx
+            print(f"Step 18: sigma_x-xf = {sigma_xxf} kN/m²")
+            return sigma_xxf
+        except Exception as ex:
+            print(f"Step 18: Error calculating sigma_x-xf: {ex}")
             return None
     else:
         if d1 == 0:
+            print("Step 18: d1 is zero, cannot calculate sigma_x-xf.")
             return None  # Avoid division by zero
         if sigma_max is None or sigma_min is None:
+            print("Step 18: sigma_max or sigma_min is None, cannot calculate sigma_x-xf.")
             return None
         try:
-            return sigma_max - ((sigma_max - sigma_min) / d1) * Dx
-        except:
+            sigma_xxf = sigma_max - ((sigma_max - sigma_min) / d1) * Dx
+            print(f"Step 18: sigma_x-xf = {sigma_xxf} kN/m²")
+            return sigma_xxf
+        except Exception as ex:
+            print(f"Step 18: Error calculating sigma_x-xf: {ex}")
             return None
 
 def calculate_sigma_x_xsc_FOSfavorable(...) -> Optional[float]:
@@ -252,6 +313,7 @@ def calculate_sigma_x_xsc_FOSfavorable(...) -> Optional[float]:
     Formula: [Provide the formula here]
     """
     # TODO: Implement the formula for sigma_x-xsc * FOSfavorable
+    print("Step 19: sigma_x-xsc * FOSfavorable calculation is not implemented yet.")
     return None
 
 def calculate_sigma_net(sigma_xxf: Optional[float], e: float,
@@ -262,12 +324,18 @@ def calculate_sigma_net(sigma_xxf: Optional[float], e: float,
     """
     if isinstance(sigma_xxf, (int, float)):
         if e >= d1 / 2:
+            print("Step 20: sigma_net = N/A (e >= d1/2)")
             return None  # "N/A"
         else:
             if adjacent_stress is None:
-                return sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
-            return sigma_xxf - adjacent_stress
+                sigma_net = sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
+                print(f"Step 20: sigma_net = {sigma_net} kN/m² (adjacent_stress = N/A)")
+                return sigma_net
+            sigma_net = sigma_xxf - adjacent_stress
+            print(f"Step 20: sigma_net = {sigma_net} kN/m²")
+            return sigma_net
     else:
+        print("Step 20: sigma_xxf is not a number, sigma_net = N/A")
         return None  # "N/A"
 
 def calculate_sigma_adjacent(e: float, d1: float, d2: float,
@@ -283,11 +351,16 @@ def calculate_sigma_adjacent(e: float, d1: float, d2: float,
             (h1 + h2) * rho_conc * safety_factor_favorable + (h1 + h2 - 0.5 * h2) * rho_ballast_wet * safety_factor_favorable))
     """
     if e >= d1 / 2:
+        print("Step 20: Adjacent Stress (H') = N/A (e >= d1/2)")
         return None  # "N/A"
     if (h2 + h3) < h2:
-        return (h1 + h2) * rho_conc * safety_factor_favorable
+        adjacent_stress = (h1 + h2) * rho_conc * safety_factor_favorable
+        print(f"Step 20: Adjacent Stress (H') = {adjacent_stress} kN/m²")
+        return adjacent_stress
     else:
-        return ((h1 + h2) * rho_conc * safety_factor_favorable) + ((h1 + h2) - 0.5 * h2) * rho_ballast_wet * safety_factor_favorable
+        adjacent_stress = ((h1 + h2) * rho_conc * safety_factor_favorable) + (((h1 + h2) - 0.5 * h2) * rho_ballast_wet * safety_factor_favorable)
+        print(f"Step 20: Adjacent Stress (H') = {adjacent_stress} kN/m²")
+        return adjacent_stress
 
 def calculate_mc(sigma_net: Optional[float], Dx: float) -> Optional[float]:
     """
@@ -295,10 +368,14 @@ def calculate_mc(sigma_net: Optional[float], Dx: float) -> Optional[float]:
     Formula: Mc = (sigma_net * Dx^2) / 2
     """
     if sigma_net is None:
+        print("Step 21: Mc = N/A (sigma_net is None)")
         return None  # Cannot calculate Mc if sigma_net is "N/A"
     try:
-        return (sigma_net * (Dx ** 2)) / 2
-    except:
+        Mc = (sigma_net * (Dx ** 2)) / 2
+        print(f"Step 21: Mc = {Mc} kNm")
+        return Mc
+    except Exception as ex:
+        print(f"Step 21: Error calculating Mc: {ex}")
         return None
 
 def calculate_wb(d1: float, d2: float) -> Optional[float]:
@@ -308,10 +385,14 @@ def calculate_wb(d1: float, d2: float) -> Optional[float]:
     """
     term = (d1 / 2) ** 2 - (d2 / 2) ** 2
     if term < 0:
+        print("Step 22: Invalid term for sqrt in wb calculation. wb = N/A")
         return None  # To avoid sqrt of negative number
     try:
-        return 2 * np.sqrt(term)
-    except:
+        wb = 2 * np.sqrt(term)
+        print(f"Step 22: wb = {wb} m")
+        return wb
+    except Exception as ex:
+        print(f"Step 22: Error calculating wb: {ex}")
         return None
 
 def calculate_mt(mc: Optional[float], wb: Optional[float]) -> Optional[float]:
@@ -320,10 +401,14 @@ def calculate_mt(mc: Optional[float], wb: Optional[float]) -> Optional[float]:
     Formula: Mt = Mc * wb
     """
     if mc is None or wb is None:
+        print("Step 23: Mt = N/A (Mc or wb is None)")
         return None  # Cannot calculate Mt
     try:
-        return mc * wb
-    except:
+        Mt = mc * wb
+        print(f"Step 23: Mt = {Mt} kNm")
+        return Mt
+    except Exception as ex:
+        print(f"Step 23: Error calculating Mt: {ex}")
         return None
 
 def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B_wet: float) -> Optional[float]:
@@ -343,6 +428,7 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         safety_factor_favorable=safety_factor_favorable
     )
     if Vd is None:
+        print("Calculation halted: Vd is None.")
         return None  # Cannot proceed without Vd
     
     # Step 2: Calculate e (eccentricity)
@@ -352,26 +438,31 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         Vd=Vd
     )
     if e is None:
+        print("Calculation halted: Eccentricity (e) is None.")
         return None  # Cannot proceed without e
     
     # Step 3: Calculate A_eff
     A_eff = calculate_A_eff(d1=params.d1, e=e)
     if A_eff is None:
+        print("Calculation halted: A_eff is None.")
         return None  # Cannot proceed without A_eff
     
     # Step 4: Calculate B_e
     B_e = calculate_B_e(d1=params.d1, e=e)
     if B_e is None:
+        print("Calculation halted: B_e is None.")
         return None  # Cannot proceed without B_e
     
     # Step 5: Calculate L_e
     L_e = calculate_L_e(d1=params.d1, B_e=B_e)
     if L_e is None:
+        print("Calculation halted: L_e is None.")
         return None  # Cannot proceed without L_e
     
     # Step 6: Calculate Leff
     Leff = calculate_Leff(A_eff=A_eff, L_e=L_e, B_e=B_e)
     if Leff is None:
+        print("Calculation halted: Leff is None.")
         return None  # Cannot proceed without Leff
     
     # Step 7: Calculate Beff
@@ -379,28 +470,27 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     Le = 0.6
     Beff = calculate_Beff(Leff=Leff, Be=B_e, Le=Le)
     if Beff is None:
+        print("Calculation halted: Beff is None.")
         return None  # Cannot proceed without Beff
     
     # Step 8: Calculate H' (Placeholder)
     H_prime = calculate_H_prime(...)  # Replace ... with actual parameters when available
-    # TODO: Implement H_prime calculation
+    # For testing purposes, you might pass dummy parameters or modify the function as needed
     
     # Step 9: Calculate Madd (Placeholder)
     Madd = calculate_Madd(...)  # Replace ... with actual parameters when available
-    # TODO: Implement Madd calculation
     
     # Step 10: Calculate Mres (Already provided as MRes_without_Vd)
     Mres = params.MRes_without_Vd
+    print(f"Step 10: Mres = {Mres} kNm")
     
     # Step 11: Calculate Fxy (Placeholder)
     Fxy = calculate_Fxy(...)  # Replace ... with actual parameters when available
-    # TODO: Implement Fxy calculation
     
     # Step 12: Calculate Fz (Placeholder)
     Fz = calculate_Fz(...)  # Replace ... with actual parameters when available
-    # TODO: Implement Fz calculation
     
-    # Step 13: Calculate L/6
+    # Step 13: Calculate L_over_6
     L_over_6 = calculate_L_over_6(Leff=Leff, Beff=Beff)
     
     # Step 14: Calculate sigma_max
@@ -412,6 +502,7 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         Beff=Beff
     )
     if sigma_max is None:
+        print("Calculation halted: sigma_max is None.")
         return None  # Cannot proceed without sigma_max
     
     # Step 15: Calculate sigma_min
@@ -425,6 +516,7 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         Mres=Mres
     )
     if sigma_min is None and e <= L_over_6:
+        print("Calculation halted: sigma_min is None.")
         return None  # Cannot proceed without sigma_min
     
     # Step 16: Calculate Lp
@@ -450,16 +542,13 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         d1=params.d1
     )
     if sigma_xxf is None:
+        print("Calculation halted: sigma_x-xf is None.")
         return None  # Cannot proceed without sigma_x-xf
     
     # Step 19: Calculate sigma_x-xsc * FOSfavorable (Placeholder)
     sigma_x_xsc_FOSfavorable = calculate_sigma_x_xsc_FOSfavorable(...)  # Replace ... with actual parameters
-    # TODO: Implement sigma_x-xsc * FOSfavorable calculation
     
-    # Step 20: Calculate sigma_net
-    # Assuming adjacent_stress is part of the calculation; if not, modify accordingly
-    # Here, you might need to calculate adjacent_stress before this step
-    # For now, we'll set it as None and handle accordingly
+    # Step 20: Calculate Adjacent Stress (H')
     adjacent_stress = calculate_sigma_adjacent(
         e=e,
         d1=params.d1,
@@ -471,6 +560,8 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         rho_conc=params.rho_conc,
         rho_ballast_wet=params.rho_ballast_wet
     )
+    
+    # Step 21: Calculate sigma_net
     sigma_net = calculate_sigma_net(
         sigma_xxf=sigma_xxf,
         e=e,
@@ -478,30 +569,34 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
         adjacent_stress=adjacent_stress
     )
     if sigma_net is None:
+        print("Calculation halted: sigma_net is None.")
         return None  # Cannot proceed without sigma_net
     
-    # Step 21: Calculate Mc
+    # Step 22: Calculate Mc
     Mc = calculate_mc(
         sigma_net=sigma_net,
         Dx=Dx
     )
     if Mc is None:
+        print("Calculation halted: Mc is None.")
         return None  # Cannot proceed without Mc
     
-    # Step 22: Calculate wb
+    # Step 23: Calculate wb
     wb = calculate_wb(
         d1=params.d1,
         d2=params.d2
     )
     if wb is None:
+        print("Calculation halted: wb is None.")
         return None  # Cannot proceed without wb
     
-    # Step 23: Calculate Mt
+    # Step 24: Calculate Mt
     Mt = calculate_mt(
         mc=Mc,
         wb=wb
     )
     if Mt is None:
+        print("Calculation halted: Mt is None.")
         return None  # Cannot proceed without Mt
     
     return Mt
@@ -511,28 +606,29 @@ if __name__ == "__main__":
     # Sample input values (replace these with actual data from your Streamlit app)
     sample_params = BendingMomentParams(
         Fz_ULS=6708.01,                 # Fz_ULS (kN)
-        MRes_without_Vd=151200.0,         # MRes without Vd (kNm)
-        d1=28.1,                        # Outer diameter (m)
-        d2=6.5,                         # Plinth diameter (m)
-        h1=0.4,                         # Specific height parameter h1 (m)
-        h2=2.2,                         # Specific height parameter h2 (m)
+        MRes_without_Vd=151200.0,        # MRes without Vd (kNm)
+        d1=28.1,                         # Outer diameter (m)
+        d2=6.5,                          # Plinth diameter (m)
+        h1=0.4,                          # Specific height parameter h1 (m)
+        h2=2.2,                          # Specific height parameter h2 (m)
         h3=1.05,                         # Specific height parameter h3 (m)
-        h4=0.1,                         # Specific height parameter h4 (m)
-        h5=0.25,                        # Specific height parameter h5 (m)
-        b1=6.5,                         # Specific breadth parameter b1 (m)
-        b2=6.0,                         # Specific breadth parameter b2 (m)
+        h4=0.1,                          # Specific height parameter h4 (m)
+        h5=0.25,                         # Specific height parameter h5 (m)
+        b1=6.5,                          # Specific breadth parameter b1 (m)
+        b2=6.0,                          # Specific breadth parameter b2 (m)
         rho_conc=24.5,                   # Concrete density (kN/m³)
         rho_ballast_wet=20.0             # Ballast density (wet) (kN/m³)
     )
     
     # Assuming total_weight and B_wet are calculated elsewhere (e.g., via Streamlit functions)
-    total_weight = 21434.94  # Example value (kN)
-    B_wet = 26753.17          # Example value (kN)
+    total_weight = 21434.94  # Total weight (kN)
+    B_wet = 26753.17          # Wet ballast force (kN)
     
     # Calculate bending moment
     Mt = calculate_bending_moment(sample_params, total_weight, B_wet)
     
+    # Output the final result
     if Mt is not None:
-        print(f"Calculated Bending Moment (Mt): {Mt:.2f} kNm")
+        print(f"\nFinal Output: Calculated Bending Moment (Mt) = {Mt:.2f} kNm")
     else:
-        print("Bending Moment (Mt) could not be calculated due to insufficient data or 'N/A' conditions.")
+        print("\nFinal Output: Bending Moment (Mt) could not be calculated due to insufficient data or 'N/A' conditions.")
