@@ -10,9 +10,7 @@ class BendingMomentParams:
     Data class to hold all necessary input parameters for bending moment calculation.
     """
     Fz_ULS: float                     # Fz value for the Extreme Load Case (kN)
-    load_factor_gamma_f: float        # Load factor γf
     MRes_without_Vd: float            # MRes without Vd (kNm)
-    safety_factor_favorable: float    # Factor of safety for favorable conditions (e.g., 0.9)
     d1: float                         # Outer diameter (m)
     d2: float                         # Plinth diameter (m)
     h1: float                         # Specific height parameter h1 (m)
@@ -25,21 +23,14 @@ class BendingMomentParams:
     rho_conc: float                   # Concrete density (kN/m³)
     rho_ballast_wet: float            # Ballast density (wet) (kN/m³)
 
-def calculate_Vd(Fz_ULS: float,
-               load_factor_gamma_f: float,
-               MRes_without_Vd: float,
-               safety_factor_favorable: float,
-               total_weight: float,
-               B_wet: float) -> float:
+def calculate_Vd(total_weight: float, B_wet: float, Fz_ULS: float, safety_factor_favorable: float = 0.9) -> float:
     """
     Calculate Vd.
     Formula: Vd = (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
     """
     return (total_weight + B_wet + Fz_ULS) * safety_factor_favorable
 
-def calculate_eccentricity(MRes_without_Vd: float,
-                          load_factor_gamma_f: float,
-                          Vd: float) -> Optional[float]:
+def calculate_eccentricity(MRes_without_Vd: float, load_factor_gamma_f: float = 1.0, Vd: float = 0.0) -> Optional[float]:
     """
     Calculate eccentricity (e).
     Formula: e = (MRes_without_Vd * load_factor_gamma_f) / Vd
@@ -96,7 +87,7 @@ def calculate_Leff(A_eff: float, L_e: float, B_e: float) -> Optional[float]:
     except:
         return None
 
-def calculate_Beff(Leff: float, Be: float, Le: float) -> Optional[float]:
+def calculate_Beff(Leff: float, Be: float, Le: float = 0.6) -> Optional[float]:
     """
     Calculate Beff.
     Formula: Beff = Leff * Be / Le
@@ -201,13 +192,13 @@ def calculate_sigma_min(e: float, L_over_6: float, Vd: float,
         except:
             return None
 
-def calculate_Lp(e: float, L_over_6: float, Lp_formula_params) -> Optional[float]:
+def calculate_Lp(e: float, L_over_6: float, d1: float, d2: float) -> Optional[float]:
     """
     Calculate Lp.
     Formula: IF(e > L_over_6, 3 * ((MAX(d1, d2) / 2) - e), "N/A")
     """
     if e > L_over_6:
-        max_diameter = max(Lp_formula_params['d1'], Lp_formula_params['d2'])
+        max_diameter = max(d1, d2)
         return 3 * ((max_diameter / 2) - e)
     else:
         return None  # "N/A"
@@ -255,6 +246,30 @@ def calculate_sigma_xxf(e: float, L_over_6: float, Lp: Optional[float],
         except:
             return None
 
+def calculate_sigma_x_xsc_FOSfavorable(...) -> Optional[float]:
+    """
+    Calculate sigma_x-xsc * FOSfavorable.
+    Formula: [Provide the formula here]
+    """
+    # TODO: Implement the formula for sigma_x-xsc * FOSfavorable
+    return None
+
+def calculate_sigma_net(sigma_xxf: Optional[float], e: float,
+                       d1: float, adjacent_stress: Optional[float]) -> Optional[float]:
+    """
+    Calculate sigma_net.
+    Formula: IF(ISNUMBER(sigma_xxf), IF(e >= d1/2, "N/A", sigma_xxf - adjacent_stress), "N/A")
+    """
+    if isinstance(sigma_xxf, (int, float)):
+        if e >= d1 / 2:
+            return None  # "N/A"
+        else:
+            if adjacent_stress is None:
+                return sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
+            return sigma_xxf - adjacent_stress
+    else:
+        return None  # "N/A"
+
 def calculate_sigma_adjacent(e: float, d1: float, d2: float,
                             h1: float, h2: float, h3: float,
                             safety_factor_favorable: float,
@@ -273,22 +288,6 @@ def calculate_sigma_adjacent(e: float, d1: float, d2: float,
         return (h1 + h2) * rho_conc * safety_factor_favorable
     else:
         return ((h1 + h2) * rho_conc * safety_factor_favorable) + ((h1 + h2) - 0.5 * h2) * rho_ballast_wet * safety_factor_favorable
-
-def calculate_sigma_net(sigma_xxf: Optional[float], e: float,
-                       d1: float, adjacent_stress: Optional[float]) -> Optional[float]:
-    """
-    Calculate sigma_net.
-    Formula: IF(ISNUMBER(sigma_xxf), IF(e >= d1/2, "N/A", sigma_xxf - adjacent_stress), "N/A")
-    """
-    if isinstance(sigma_xxf, (int, float)):
-        if e >= d1 / 2:
-            return None  # "N/A"
-        else:
-            if adjacent_stress is None:
-                return sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
-            return sigma_xxf - adjacent_stress
-    else:
-        return None  # "N/A"
 
 def calculate_mc(sigma_net: Optional[float], Dx: float) -> Optional[float]:
     """
@@ -327,44 +326,21 @@ def calculate_mt(mc: Optional[float], wb: Optional[float]) -> Optional[float]:
     except:
         return None
 
-def calculate_Fxy(...) -> Optional[float]:
-    """
-    Calculate Fxy.
-    Formula: [Provide the formula here]
-    """
-    # TODO: Implement the formula for Fxy
-    return None
-
-def calculate_Fz(...) -> Optional[float]:
-    """
-    Calculate Fz.
-    Formula: [Provide the formula here]
-    """
-    # TODO: Implement the formula for Fz
-    return None
-
-# Placeholder for sigma_x-xsc * FOSfavorable
-def calculate_sigma_x_xsc_FOSfavorable(...) -> Optional[float]:
-    """
-    Calculate sigma_x-xsc * FOSfavorable.
-    Formula: [Provide the formula here]
-    """
-    # TODO: Implement the formula for sigma_x-xsc * FOSfavorable
-    return None
-
 def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B_wet: float) -> Optional[float]:
     """
     Main function to calculate the bending moment Mt = Mc * wb.
     It sequentially calculates all intermediate values based on the provided parameters.
     """
+    # Constants
+    safety_factor_favorable = 0.9
+    load_factor_gamma_f = 1.0
+    
     # Step 1: Calculate Vd
     Vd = calculate_Vd(
-        Fz_ULS=params.Fz_ULS,
-        load_factor_gamma_f=params.load_factor_gamma_f,
-        MRes_without_Vd=params.MRes_without_Vd,
-        safety_factor_favorable=params.safety_factor_favorable,
         total_weight=total_weight,
-        B_wet=B_wet
+        B_wet=B_wet,
+        Fz_ULS=params.Fz_ULS,
+        safety_factor_favorable=safety_factor_favorable
     )
     if Vd is None:
         return None  # Cannot proceed without Vd
@@ -372,7 +348,7 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     # Step 2: Calculate e (eccentricity)
     e = calculate_eccentricity(
         MRes_without_Vd=params.MRes_without_Vd,
-        load_factor_gamma_f=params.load_factor_gamma_f,
+        load_factor_gamma_f=load_factor_gamma_f,
         Vd=Vd
     )
     if e is None:
@@ -408,7 +384,6 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     # Step 8: Calculate H' (Placeholder)
     H_prime = calculate_H_prime(...)  # Replace ... with actual parameters when available
     # TODO: Implement H_prime calculation
-    # For now, we'll skip using H_prime until the formula is provided
     
     # Step 9: Calculate Madd (Placeholder)
     Madd = calculate_Madd(...)  # Replace ... with actual parameters when available
@@ -456,7 +431,8 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     Lp = calculate_Lp(
         e=e,
         L_over_6=L_over_6,
-        Lp_formula_params={'d1': params.d1, 'd2': params.d2}
+        d1=params.d1,
+        d2=params.d2
     )
     # Lp is None if "N/A"
     
@@ -481,14 +457,26 @@ def calculate_bending_moment(params: BendingMomentParams, total_weight: float, B
     # TODO: Implement sigma_x-xsc * FOSfavorable calculation
     
     # Step 20: Calculate sigma_net
+    # Assuming adjacent_stress is part of the calculation; if not, modify accordingly
+    # Here, you might need to calculate adjacent_stress before this step
+    # For now, we'll set it as None and handle accordingly
+    adjacent_stress = calculate_sigma_adjacent(
+        e=e,
+        d1=params.d1,
+        d2=params.d2,
+        h1=params.h1,
+        h2=params.h2,
+        h3=params.h3,
+        safety_factor_favorable=safety_factor_favorable,
+        rho_conc=params.rho_conc,
+        rho_ballast_wet=params.rho_ballast_wet
+    )
     sigma_net = calculate_sigma_net(
         sigma_xxf=sigma_xxf,
         e=e,
         d1=params.d1,
-        adjacent_stress=None  # Will be calculated next
+        adjacent_stress=adjacent_stress
     )
-    # Note: Adjust 'adjacent_stress' as per your requirements
-    
     if sigma_net is None:
         return None  # Cannot proceed without sigma_net
     
@@ -523,9 +511,7 @@ if __name__ == "__main__":
     # Sample input values (replace these with actual data from your Streamlit app)
     sample_params = BendingMomentParams(
         Fz_ULS=3300.0,                 # Fz_ULS (kN)
-        load_factor_gamma_f=1.2,        # Load factor γf
         MRes_without_Vd=1000.0,         # MRes without Vd (kNm)
-        safety_factor_favorable=0.9,    # Safety factor (e.g., 0.9)
         d1=10.0,                        # Outer diameter (m)
         d2=6.0,                         # Plinth diameter (m)
         h1=1.0,                         # Specific height parameter h1 (m)
