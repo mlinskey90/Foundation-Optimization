@@ -344,7 +344,7 @@ h3 = st.sidebar.number_input('h3 (m)', value=0.795, format="%.3f")
 h4 = st.sidebar.number_input('h4 (m)', value=0.100, format="%.3f")
 h5 = st.sidebar.number_input('h5 (m)', value=0.250, format="%.3f")
 b1 = st.sidebar.number_input('b1 (m)', value=6.000, format="%.3f")
-b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f')
+b2 = st.sidebar.number_input('b2 (m)', value=5.500, format="%.3f")
 h_anchor = st.sidebar.number_input(r'$h_{anchor}$ (m)', value=2.700, format="%.3f")
 
 initial_params = [d1, d2, h1, h2, h3, h4, h5, b1, b2]
