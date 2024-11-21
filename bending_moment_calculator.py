@@ -143,7 +143,42 @@ def calculate_H_prime(M_z_ULS: float, F_Res_ULS: float, Leff: float, load_factor
         print(f"Step 8: Error calculating H': {ex}")
         return None
 
-def calculate_Mt(params: BendingMomentParams, total_weight: float, B_wet: float) -> Optional[float]:
+def calculate_Mc(sigma_net: float, Dx: float, e: float, d1: float) -> Optional[float]:
+    """
+    Calculate Mc using the formula from the Excel sheet:
+    IF(H146<=0,"N/A",IF(ISNUMBER(H144),IF(H121>=G33/2,"N/A",(H146*H143^2)/2),"N/A"))
+    """
+    try:
+        if sigma_net <= 0:
+            print("Step 9: sigma_net is less than or equal to 0, cannot calculate Mc.")
+            return None
+        if e >= d1 / 2:
+            print("Step 9: Eccentricity (e) is greater than or equal to half of d1, cannot calculate Mc.")
+            return None
+        Mc = (sigma_net * Dx ** 2) / 2
+        print(f"Step 9: Mc = {Mc:.4f} kNm")
+        return Mc
+    except Exception as ex:
+        print(f"Step 9: Error calculating Mc: {ex}")
+        return None
+
+def calculate_wb(d1: float, d2: float) -> Optional[float]:
+    """
+    Calculate wb using the formula from the Excel sheet:
+    wb = 2 * SQRT((d1/2)^2 - (d2/2)^2)
+    """
+    try:
+        if d1 <= d2:
+            print("Step 10: d1 must be greater than d2 to calculate wb.")
+            return None
+        wb = 2 * np.sqrt((d1 / 2) ** 2 - (d2 / 2) ** 2)
+        print(f"Step 10: wb = {wb:.4f} m")
+        return wb
+    except Exception as ex:
+        print(f"Step 10: Error calculating wb: {ex}")
+        return None
+
+def calculate_Mt(params: BendingMomentParams, total_weight: float, B_wet: float, sigma_net: float, Dx: float) -> Optional[float]:
     """
     Main function to calculate the bending moment Mt = Mc * wb.
     It sequentially calculates all intermediate values based on the provided parameters.
@@ -173,52 +208,31 @@ def calculate_Mt(params: BendingMomentParams, total_weight: float, B_wet: float)
         print("Calculation halted: Eccentricity (e) is None.")
         return None  # Cannot proceed without e
     
-    # Step 3: Calculate A_eff
-    A_eff = calculate_A_eff(d1=params.d1, e=e)
-    if A_eff is None:
-        print("Calculation halted: A_eff is None.")
-        return None  # Cannot proceed without A_eff
+    # Step 9: Calculate Mc
+    Mc = calculate_Mc(sigma_net=sigma_net, Dx=Dx, e=e, d1=params.d1)
+    if Mc is None:
+        print("Calculation halted: Mc is None.")
+        return None  # Cannot proceed without Mc
     
-    # Step 4: Calculate B_e
-    B_e = calculate_B_e(d1=params.d1, e=e)
-    if B_e is None:
-        print("Calculation halted: B_e is None.")
-        return None  # Cannot proceed without B_e
-    
-    # Step 5: Calculate L_e
-    L_e = calculate_L_e(d1=params.d1, B_e=B_e)
-    if L_e is None:
-        print("Calculation halted: L_e is None.")
-        return None  # Cannot proceed without L_e
-    
-    # Step 6: Calculate Leff
-    Leff = calculate_Leff(A_eff=A_eff, L_e=L_e, B_e=B_e)
-    if Leff is None:
-        print("Calculation halted: Leff is None.")
-        return None  # Cannot proceed without Leff
-    
-    # Step 7: Calculate Beff
-    Beff = calculate_Beff(Leff=Leff, B_e=B_e, L_e=L_e)
-    if Beff is None:
-        print("Calculation halted: Beff is None.")
-        return None  # Cannot proceed without Beff
-    
-    # Step 8: Calculate H'
-    H_prime = calculate_H_prime(
-        M_z_ULS=params.M_z_ULS,
-        F_Res_ULS=params.F_Res_ULS,
-        Leff=Leff,
-        load_factor_gamma_f=load_factor_gamma_f
-    )
-    if H_prime is None:
-        print("Calculation halted: H' is None.")
-        return None  # Cannot proceed without H'
-    
-    # Placeholder for further calculations to determine Mc and wb
-    Mc = 0.0  # Placeholder for Mc calculation
-    wb = 0.0  # Placeholder for wb calculation
+    # Step 10: Calculate wb
+    wb = calculate_wb(d1=params.d1, d2=params.d2)
+    if wb is None:
+        print("Calculation halted: wb is None.")
+        return None  # Cannot proceed without wb
     
     # Step 23: Calculate Mt
     try:
         Mt = Mc * wb
         print(f"Step 23: Mt = {Mt:.4f} kNm")
+        return Mt
+    except Exception as ex:
+        print(f"Step 23: Error calculating Mt: {ex}")
+        return None
+
+# Example usage
+if __name__ == "__main__":
+    # Sample input values (replace these with actual data from your Streamlit app)
+    sample_params = BendingMomentParams(
+        Fz_ULS=6708.01,                 # Fz_ULS (kN)
+        MRes_without_Vd=151200.0,        # MRes without Vd (kNm)
+        d1=28
