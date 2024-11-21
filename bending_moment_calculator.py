@@ -108,16 +108,16 @@ def calculate_Leff(A_eff: float, L_e: float, B_e: float) -> Optional[float]:
         print(f"Step 6: Error calculating Leff: {ex}")
         return None
 
-def calculate_Beff(Leff: float, Be: float, Le: float = 0.6) -> Optional[float]:
+def calculate_Beff(Leff: float, B_e: float, L_e: float) -> Optional[float]:
     """
     Calculate Beff.
-    Formula: Beff = Leff * Be / Le
+    Formula: Beff = Leff * B_e / L_e
     """
-    if Le == 0:
-        print("Step 7: Le is zero, cannot calculate Beff.")
+    if L_e == 0:
+        print("Step 7: L_e is zero, cannot calculate Beff.")
         return None  # Avoid division by zero
     try:
-        Beff = (Leff * Be) / Le
+        Beff = (Leff * B_e) / L_e
         print(f"Step 7: Beff = {Beff:.4f} m")
         return Beff
     except Exception as ex:
@@ -198,7 +198,7 @@ def calculate_Mt(params: BendingMomentParams, total_weight: float, B_wet: float)
         return None  # Cannot proceed without Leff
     
     # Step 7: Calculate Beff
-    Beff = calculate_Beff(Leff=Leff, Be=B_e)
+    Beff = calculate_Beff(Leff=Leff, B_e=B_e, L_e=L_e)
     if Beff is None:
         print("Calculation halted: Beff is None.")
         return None  # Cannot proceed without Beff
@@ -222,22 +222,3 @@ def calculate_Mt(params: BendingMomentParams, total_weight: float, B_wet: float)
     try:
         Mt = Mc * wb
         print(f"Step 23: Mt = {Mt:.4f} kNm")
-        return Mt
-    except Exception as ex:
-        print(f"Step 23: Error calculating Mt: {ex}")
-        return None
-
-# Example usage
-if __name__ == "__main__":
-    # Sample input values (replace these with actual data from your Streamlit app)
-    sample_params = BendingMomentParams(
-        Fz_ULS=6708.01,                 # Fz_ULS (kN)
-        MRes_without_Vd=151200.0,        # MRes without Vd (kNm)
-        d1=28.1,                         # Outer diameter (m)
-        d2=6.5,                          # Plinth diameter (m)
-        h1=0.4,                          # Specific height parameter h1 (m)
-        h2=2.2,                          # Specific height parameter h2 (m)
-        h3=1.05,                         # Specific height parameter h3 (m)
-        h4=0.1,                          # Specific height parameter h4 (m)
-        h5=0.25,                         # Specific height parameter h5 (m)
-        b1=6.5,                          # Specific
