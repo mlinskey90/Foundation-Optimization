@@ -115,21 +115,46 @@ def calculate_Leff(A_eff: float, L_e: float, B_e: float) -> Optional[float]:
         return None
 
 
-def calculate_Beff(Leff: float, Be: float, Le: float = 0.6) -> Optional[float]:
+def calculate_Beff(Leff: float, Be: float, Le: float) -> Optional[float]:
     """
     Calculate Beff.
     Formula: Beff = Leff * Be / Le
     """
-    if Le == 0:
-        print("Step 7: Le is zero, cannot calculate Beff.")
-        return None  # Avoid division by zero
+    # Debug input values
+    print(f"Inputs to calculate_Beff: Leff = {Leff:.4f}, B_e = {Be:.4f}, Le = {Le:.4f}")
+    
+    # Validate Le to avoid division by zero or invalid values
+    if Le <= 0:
+        print(f"Step 7: Invalid Le value ({Le:.4f}). Le must be greater than zero.")
+        return None
+    
     try:
+        # Calculate Beff
         Beff = (Leff * Be) / Le
         print(f"Step 7: Beff = {Beff:.4f} m")
         return Beff
     except Exception as ex:
         print(f"Step 7: Error calculating Beff: {ex}")
         return None
+
+def calculate_Dx(d1: float, d2: float) -> float:
+    """
+    Calculate Dx.
+    Formula: Dx = (d1 - d2) / 2
+    """
+    Dx = (d1 - d2) / 2
+    print(f"Step 8: Dx = {Dx:.4f} m")
+    return Dx
+
+def calculate_L_sixth(Leff: float, B_e: float) -> float:
+    """
+    Calculate L/6.
+    Formula: L_sixth = max(Leff, B_e) / 6
+    """
+    L_sixth = max(Leff, B_e) / 6
+    print(f"Step 9: L_sixth = {L_sixth:.4f} m")
+    return L_sixth
+
 
 
 def calculate_H_prime(M_z_ULS: float, F_Res_ULS: float, Leff: float, load_factor_gamma_f: float = 1.0) -> Optional[float]:
@@ -141,13 +166,13 @@ def calculate_H_prime(M_z_ULS: float, F_Res_ULS: float, Leff: float, load_factor
         term1 = (2 * (M_z_ULS * load_factor_gamma_f)) / Leff
         term2 = np.sqrt((F_Res_ULS * load_factor_gamma_f) ** 2 + term1 ** 2)
         H_prime = term1 + term2
-        print(f"Step 8: H' = {H_prime:.4f} kN")
+        print(f"Step 10: H' = {H_prime:.4f} kN")
         return H_prime
     except ZeroDivisionError:
-        print("Step 8: Error - Leff is zero, cannot calculate H'.")
+        print("Step 10: Error - Leff is zero, cannot calculate H'.")
         return None
     except Exception as ex:
-        print(f"Step 8: Error calculating H': {ex}")
+        print(f"Step 10: Error calculating H': {ex}")
         return None
 
 
@@ -158,10 +183,10 @@ def calculate_Madd(H_prime: float, h_water: float) -> Optional[float]:
     """
     try:
         Madd = H_prime * h_water
-        print(f"Step 9: Madd = {Madd:.4f} kNm")
+        print(f"Step 11: Madd = {Madd:.4f} kNm")
         return Madd
     except Exception as ex:
-        print(f"Step 9: Error calculating Madd: {ex}")
+        print(f"Step 11: Error calculating Madd: {ex}")
         return None
 
 
@@ -189,30 +214,162 @@ def calculate_Mres(Madd: float, MRes_ULS: float, load_factor_gamma_f: float = 1.
     Formula: Mres = Madd + (MRes_ULS * γ_f)
     """
     Mres = Madd + (MRes_ULS * load_factor_gamma_f)
-    print(f"Step 10: Mres = {Mres:.4f} kNm")
+    print(f"Step 12: Mres = {Mres:.4f} kNm")
     return Mres
 
+def calculate_sigma_max(Vd: float, Leff: float, Beff: float, eccentricity: float, L_sixth: float) -> float:
+    """
+    Calculate σmax.
+    Formula: 
+    - If eccentricity > L/6:
+        σmax = (2 * Vd) / ((3 * min(Leff, Beff)) * (0.5 * max(Leff, Beff) - eccentricity))
+    - Otherwise:
+        σmax = (Vd / (Leff * Beff)) + ((6 * Vd) / (min(Leff, Beff) * (max(Leff, Beff)^2)))
+    """
+    min_dim = min(Leff, Beff)
+    max_dim = max(Leff, Beff)
 
-def calculate_sigma_net(sigma_xxf: Optional[float], e: float, d1: float, adjacent_stress: Optional[float]) -> Optional[float]:
-    """
-    Calculate sigma_net.
-    Formula: IF(ISNUMBER(sigma_xxf), IF(e >= d1/2, "N/A", sigma_xxf - adjacent_stress), "N/A")
-    """
-    if isinstance(sigma_xxf, (int, float)):
-        if e >= d1 / 2:
-            print("Step 20: sigma_net = N/A (e >= d1/2)")
-            return None  # "N/A"
-        else:
-            if adjacent_stress is None:
-                sigma_net = sigma_xxf  # If adjacent_stress is "N/A", assume it's zero or handle accordingly
-                print(f"Step 20: sigma_net = {sigma_net:.4f} kN/m² (adjacent_stress = N/A)")
-                return sigma_net
-            sigma_net = sigma_xxf - adjacent_stress
-            print(f"Step 20: sigma_net = {sigma_net:.4f} kN/m²")
-            return sigma_net
+    print(f"Intermediate: min_dim = {min_dim:.4f}, max_dim = {max_dim:.4f}, L_sixth = {L_sixth:.4f}")
+    print(f"Debug: Checking condition: eccentricity = {eccentricity:.4f}, L_sixth = {L_sixth:.4f}")
+
+    if eccentricity > L_sixth:
+        # Debugging intermediate calculations for Case 1
+        print("Debug: Branch 1 (eccentricity > L_sixth)")
+        denominator = (3 * min_dim) * (0.5 * max_dim - eccentricity)
+        if denominator <= 0:
+            raise ValueError(f"Invalid denominator in σmax calculation: {denominator}")
+        sigma_max = (2 * Vd) / denominator
+        print(f"Case 1: σmax = (2 * {Vd:.4f}) / ({denominator:.4f}) = {sigma_max:.4f}")
     else:
-        print("Step 20: sigma_xxf is not a number, sigma_net = N/A")
-        return None  # "N/A"
+        # Debugging intermediate calculations for Case 2
+        print("Debug: Branch 2 (eccentricity <= L_sixth)")
+        term1 = Vd / (Leff * Beff)
+        term2_denominator = min_dim * max_dim**2
+        if term2_denominator <= 0:
+            raise ValueError(f"Invalid denominator in σmax Case 2 term 2: {term2_denominator}")
+        term2 = (6 * Vd) / term2_denominator
+        sigma_max = term1 + term2
+        print(f"Case 2: σmax = ({term1:.4f}) + ({term2:.4f}) = {sigma_max:.4f}")
+
+    print(f"Step 13: σmax = {sigma_max:.4f} kN/m²")
+    return sigma_max
+
+def calculate_sigma_min(
+    Vd: float,
+    Leff: float,
+    Beff: float,
+    Mres: float,
+    L_sixth: float,
+    eccentricity: float
+) -> float:
+    """
+    Calculate σmin.
+    Formula:
+    - If eccentricity > L_sixth, σmin = 0.
+    - Otherwise:
+        σmin = (Vd / (Leff * Beff)) - ((6 * Mres) / (min(Leff, Beff) * (max(Leff, Beff)^2))).
+    """
+    if eccentricity > L_sixth:
+        print("Step 13: σmin = 0 (eccentricity > L_sixth)")
+        return 0
+
+    min_dim = min(Leff, Beff)
+    max_dim = max(Leff, Beff)
+    sigma_min = (Vd / (Leff * Beff)) - ((6 * Mres) / (min_dim * max_dim**2))
+    print(f"Step 13: σmin = {sigma_min:.4f} kN/m²")
+    return sigma_min
+
+
+def calculate_Lp(
+    Leff: float,
+    Beff: float,
+    eccentricity: float,
+    L_sixth: float
+) -> Optional[float]:
+    """
+    Calculate Lp.
+    Formula:
+    - If eccentricity > L_sixth:
+        Lp = 3 * ((max(Leff, Beff) / 2) - eccentricity).
+    - Otherwise, return None ("N/A").
+    """
+    if eccentricity > L_sixth:
+        max_dim = max(Leff, Beff)
+        Lp = 3 * ((max_dim / 2) - eccentricity)
+        print(f"Step 14: Lp = {Lp:.4f} m")
+        return Lp
+    else:
+        print("Step 14: Lp = N/A (eccentricity <= L_sixth)")
+        return None
+
+
+def calculate_sigma_xxf(
+    sigma_max: float,
+    sigma_min: float,
+    eccentricity: float,
+    d1: float,
+    L_sixth: float,
+    Lp: float,
+    Dx: float
+) -> Optional[float]:
+    """
+    Calculate σx-xf (stress due to worst forces).
+    Formula:
+    - If eccentricity >= d1 / 2, return None ("N/A").
+    - If eccentricity > L_sixth:
+        - If Lp < Dx, return None ("N/A-Lp<Dx").
+        - Otherwise, σx-xf = σmax - ((σmax - σmin) / Lp) * Dx.
+    - Otherwise:
+        σx-xf = σmax - ((σmax - σmin) / d1) * Dx.
+    """
+    if eccentricity >= d1 / 2:
+        print("Step 14: σx-xf = N/A (eccentricity >= d1 / 2)")
+        return None
+
+    if eccentricity > L_sixth:
+        if Lp < Dx:
+            print("Step 14: σx-xf = N/A-Lp<Dx (Lp < Dx)")
+            return None
+        sigma_xxf = sigma_max - ((sigma_max - sigma_min) / Lp) * Dx
+    else:
+        sigma_xxf = sigma_max - ((sigma_max - sigma_min) / d1) * Dx
+
+    print(f"Step 14: σx-xf = {sigma_xxf:.4f} kN/m²")
+    return sigma_xxf
+
+def calculate_sigma_xsc_FOS_favourable(h1: float, h2: float, h3: float, rho_conc: float, rho_ballast_wet: float, FOS_favourable: float) -> float:
+    """
+    Calculate σx-xsc * FOS_favourable.
+    Formula: 
+    - If (h2 + h3) < h2:
+        σx-xsc = ((h1 + h2) * rho_conc * FOS_favourable)
+    - Otherwise:
+        σx-xsc = ((h1 + h2) * rho_conc * FOS_favourable) + 
+                 (((h1 + h2) - 0.5 * h2) * rho_ballast_wet * FOS_favourable)
+    """
+    if (h2 + h3) < h2:
+        sigma_xsc = (h1 + h2) * rho_conc * FOS_favourable
+    else:
+        sigma_xsc = ((h1 + h2) * rho_conc * FOS_favourable) + (((h1 + h2) - 0.5 * h2) * rho_ballast_wet * FOS_favourable)
+    print(f"Step 14: σx-xsc * FOS_favourable = {sigma_xsc:.4f} kN/m²")
+    return sigma_xsc
+
+  
+def calculate_sigma_net(
+    sigma_xxf: Optional[float],
+    sigma_xsc_favourable: float
+) -> Optional[float]:
+    """
+    Calculate σ_net.
+    Formula: σ_net = σx-xf - σx-xsc * FOS_favourable.
+    """
+    if sigma_xxf is None:
+        print("Step 15: σ_net = N/A (σx-xf is None)")
+        return None
+
+    sigma_net = sigma_xxf - sigma_xsc_favourable
+    print(f"Step 15: σ_net = {sigma_net:.4f} kN/m²")
+    return sigma_net
 
 
 def calculate_mc(sigma_net: Optional[float], Dx: float) -> Optional[float]:
@@ -221,14 +378,14 @@ def calculate_mc(sigma_net: Optional[float], Dx: float) -> Optional[float]:
     Formula: Mc = (sigma_net * Dx^2) / 2 if σ_net > 0.
     """
     if sigma_net is None or sigma_net <= 0:
-        print("Step 21: Mc = N/A (σ_net <= 0)")
+        print("Step 16: Mc = N/A (σ_net <= 0)")
         return None
     try:
         Mc = (sigma_net * (Dx ** 2)) / 2
-        print(f"Step 21: Mc = {Mc:.4f} kNm")
+        print(f"Step 16: Mc = {Mc:.4f} kNm")
         return Mc
     except Exception as ex:
-        print(f"Step 21: Error calculating Mc: {ex}")
+        print(f"Step 16: Error calculating Mc: {ex}")
         return None
 
 
@@ -239,14 +396,14 @@ def calculate_wb(d1: float, d2: float) -> Optional[float]:
     """
     term = (d1 / 2) ** 2 - (d2 / 2) ** 2
     if term < 0:
-        print("Step 22: Invalid term for sqrt in wb calculation. wb = N/A")
+        print("Step 17: Invalid term for sqrt in wb calculation. wb = N/A")
         return None  # To avoid sqrt of negative number
     try:
         wb = 2 * np.sqrt(term)
-        print(f"Step 22: wb = {wb:.4f} m")
+        print(f"Step 17: wb = {wb:.4f} m")
         return wb
     except Exception as ex:
-        print(f"Step 22: Error calculating wb: {ex}")
+        print(f"Step 17: Error calculating wb: {ex}")
         return None
 
 
@@ -256,14 +413,14 @@ def calculate_mt(mc: Optional[float], wb: Optional[float]) -> Optional[float]:
     Formula: Mt = Mc * wb
     """
     if mc is None or wb is None:
-        print("Step 23: Mt = N/A (Mc or wb is None)")
+        print("Step 18: Mt = N/A (Mc or wb is None)")
         return None  # Cannot calculate Mt
     try:
         Mt = mc * wb
-        print(f"Step 23: Mt = {Mt:.4f} kNm")
+        print(f"Step 18: Mt = {Mt:.4f} kNm")
         return Mt
     except Exception as ex:
-        print(f"Step 23: Error calculating Mt: {ex}")
+        print(f"Step 18: Error calculating Mt: {ex}")
         return None
 
 
@@ -291,6 +448,7 @@ if __name__ == "__main__":
     # Assuming total_weight and B_wet are calculated elsewhere
     total_weight = 21434.94  # Total weight (kN)
     B_wet = 26753.17          # Wet ballast force (kN)
+    FOS_favourable = 0.9     # Favourable Factor of Safety
 
     # Calculate bending moment
     Vd = calculate_Vd(total_weight, B_wet, sample_params.Fz_ULS)
@@ -299,12 +457,20 @@ if __name__ == "__main__":
     B_e = calculate_B_e(sample_params.d1, e)
     L_e = calculate_L_e(sample_params.d1, B_e)
     Leff = calculate_Leff(A_eff, L_e, B_e)
-    Beff = calculate_Beff(Leff, B_e)
+    Beff = calculate_Beff(Leff, B_e, L_e)
+    Dx = calculate_Dx(sample_params.d1, sample_params.d2)
+    L_sixth = calculate_L_sixth(Leff, B_e)
     H_prime = calculate_H_prime(sample_params.M_z_ULS, sample_params.F_Res_ULS, Leff)
-    Madd = calculate_Madd(H_prime, h_water=5.0)  # Assuming h_water = 5.0 m
+    Madd = calculate_Madd(H_prime, h_water=3.55)  # Assuming h_water = 3.55 m
     Mres = calculate_Mres(Madd, sample_params.MRes_without_Vd)
-    Dx = (sample_params.d1 - sample_params.d2) / 2
-    sigma_net = calculate_sigma_net(H_prime, e, sample_params.d1, adjacent_stress=None)  # Adjacent stress as None for now
+    sigma_max = calculate_sigma_max(Vd, Leff, Beff, e, L_sixth)
+    Lp = calculate_Lp(Leff, Beff, e, L_sixth)
+    sigma_min = calculate_sigma_min(Vd, Leff, Beff, Mres, L_sixth, e)
+    sigma_xxf = calculate_sigma_xxf(sigma_max, sigma_min, e, sample_params.d1, L_sixth, Lp if Lp is not None else sample_params.d1, Dx)
+    sigma_xsc_favourable = calculate_sigma_xsc_FOS_favourable(
+        sample_params.h1, sample_params.h2, sample_params.h3, sample_params.rho_conc, sample_params.rho_ballast_wet, FOS_favourable
+    )
+    sigma_net = calculate_sigma_net(sigma_xxf, sigma_xsc_favourable)
     Mc = calculate_mc(sigma_net, Dx)
     wb = calculate_wb(sample_params.d1, sample_params.d2)
     Mt = calculate_mt(Mc, wb)
