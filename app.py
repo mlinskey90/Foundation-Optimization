@@ -60,6 +60,40 @@ if st.button("Run Calculations"):
     
     # Calculate the bending moment Mt
     Mt = calculate_Mt(bending_params, total_weight, B_wet)
+
+        st.write(f"Calculated Bending Moment (Mt): {Mt:.2f} kNm")
+
+    
+
+    # Optimize dimensions based on Mt
+
+    def calculate_volumes(d1, d2, h1, h2, h3, h4, h5, b1, b2, Mt):
+
+        """
+
+        Adjust foundation dimensions based on bending moment Mt for optimization.
+
+        """
+
+        scaling_factor = 1.0 + (Mt / 1e5)  # Example scaling factor logic
+
+        optimized_d1 = d1 * scaling_factor
+
+        optimized_d2 = d2 * scaling_factor
+
+        return optimized_d1, optimized_d2, scaling_factor
+
+
+
+    optimized_d1, optimized_d2, scaling_factor = calculate_volumes(d1, d2, h1, h2, h3, h4, h5, b1, b2, Mt)
+
+    st.write(f"Optimized d1: {optimized_d1:.2f} m, Optimized d2: {optimized_d2:.2f} m (Scaling Factor: {scaling_factor:.2f})")
+
+    
+
+    # Update parameters with optimized values
+
+    params = [optimized_d1, optimized_d2, h1, h2, h3, h4, h5, b1, b2]
     
     # Use pressure calculations
     p_min, p_max, B_wet, B_dry, W, vertical_load, total_weight = calculate_pressures(params, F_z, F_RES, M_RES, rho_conc, rho_ballast_wet, -9.81, rho_ballast_dry)
@@ -76,7 +110,7 @@ if st.button("Run Calculations"):
 # Optional: Plotting the foundation comparison
 if st.button("Plot Foundation Comparison"):
     original_params = params
-    optimized_params = [d1 * 0.95, d2 * 0.95, h1, h2, h3, h4, h5, b1, b2]  # Example of modified dimensions for optimization
+    optimized_params = [optimized_d1, optimized_d2, h1, h2, h3, h4, h5, b1, b2]
     
     fig, ax = plt.subplots(figsize=(20, 15))
     fig.patch.set_facecolor('white')
